@@ -1,0 +1,7 @@
+.agent/
+.agents/
+.opencode/
+dist/
+docs/
+node_modules/
+openspec/

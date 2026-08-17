@@ -1,0 +1,131 @@
+<script setup lang="ts">
+const props = defineProps<{
+  currentTab: 'ledger' | 'graph' | 'nodes';
+}>();
+
+const emit = defineEmits<{
+  (e: 'changeTab', tab: 'ledger' | 'graph' | 'nodes'): void;
+  (e: 'openEntry'): void;
+}>();
+</script>
+
+<template>
+  <nav class="bottom-nav-bar">
+    <button
+      class="nav-item"
+      :class="{ active: props.currentTab === 'ledger' }"
+      @click="emit('changeTab', 'ledger')"
+    >
+      <span class="nav-icon">🧾</span>
+      <span class="nav-label">收據帳本</span>
+    </button>
+
+    <button
+      class="nav-item"
+      :class="{ active: props.currentTab === 'graph' }"
+      @click="emit('changeTab', 'graph')"
+    >
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">圖論分析</span>
+    </button>
+
+    <!-- 中央懸浮主要動作按鈕 -->
+    <div class="nav-fab-wrapper">
+      <button class="nav-fab-btn" title="記一筆新收據" @click="emit('openEntry')">
+        <span class="fab-plus">＋</span>
+      </button>
+    </div>
+
+    <button
+      class="nav-item"
+      :class="{ active: props.currentTab === 'nodes' }"
+      @click="emit('changeTab', 'nodes')"
+    >
+      <span class="nav-icon">💼</span>
+      <span class="nav-label">帳戶管理</span>
+    </button>
+  </nav>
+</template>
+
+<style scoped>
+.bottom-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 64px;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 500;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  gap: 2px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  transition: all 0.15s ease;
+}
+
+.nav-item.active {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 18px;
+}
+
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.nav-fab-wrapper {
+  position: relative;
+  top: -14px;
+}
+
+.nav-fab-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--text-primary);
+  color: #FFFFFF;
+  border: 3px solid var(--bg-surface);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-fab-btn:hover {
+  transform: scale(1.06);
+  background-color: #333333;
+}
+
+.nav-fab-btn:active {
+  transform: scale(0.94);
+}
+
+.fab-plus {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+}
+</style>
