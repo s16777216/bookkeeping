@@ -10,14 +10,75 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'submit', payload: { from_node_id: string; to_node_id: string; amount: number; memo: string }): void;
+  (e: 'submit', payload: {
+    from_node_id: string;
+    to_node_id: string;
+    amount: number;
+    memo: string;
+    timestamp: number;
+  }): void;
 }>();
 
 const selectedFromId = ref<string>('');
 const selectedToId = ref<string>('');
 const amountInput = ref<string>('');
 const memoInput = ref<string>('');
+const dateTimeInput = ref<string>('');
 const errorMessage = ref<string>('');
+
+// 本地時間格式化工具函式 (YYYY-MM-DDTHH:mm)
+function toLocalISOString(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const YYYY = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const DD = pad(d.getDate());
+  const HH = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${YYYY}-${MM}-${DD}T${HH}:${mm}`;
+}
+
+// 計算當前選中的快捷標籤（雙向連動）
+const activeQuickDate = computed<'now' | 'yesterday' | 'beforeYesterday' | null>(() => {
+  if (!dateTimeInput.value) return null;
+  const inputDate = new Date(dateTimeInput.value);
+  if (isNaN(inputDate.getTime())) return null;
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  const beforeYesterday = new Date();
+  beforeYesterday.setDate(today.getDate() - 2);
+
+  const isSameDate = (d1: Date, d2: Date) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+
+  if (isSameDate(inputDate, today)) return 'now';
+  if (isSameDate(inputDate, yesterday)) return 'yesterday';
+  if (isSameDate(inputDate, beforeYesterday)) return 'beforeYesterday';
+  return null;
+});
+
+function setQuickDate(type: 'now' | 'yesterday' | 'beforeYesterday') {
+  if (type === 'now') {
+    dateTimeInput.value = toLocalISOString(new Date());
+    return;
+  }
+
+  // 取得當前已選的時與分，若無效則以當前時間為基準
+  const current = new Date(dateTimeInput.value);
+  const base = isNaN(current.getTime()) ? new Date() : current;
+
+  const target = new Date();
+  if (type === 'yesterday') {
+    target.setDate(target.getDate() - 1);
+  } else if (type === 'beforeYesterday') {
+    target.setDate(target.getDate() - 2);
+  }
+  target.setHours(base.getHours(), base.getMinutes(), 0, 0);
+  dateTimeInput.value = toLocalISOString(target);
+}
 
 // 分類節點群組
 const fromNodes = computed(() => {
@@ -37,6 +98,9 @@ watch(
       errorMessage.value = '';
       amountInput.value = '';
       memoInput.value = '';
+      // 每次開啟抽屜一律重設為當前時刻
+      dateTimeInput.value = toLocalISOString(new Date());
+
       if (props.initialFromNode) {
         selectedFromId.value = props.initialFromNode.id;
       } else if (fromNodes.value.length > 0 && !selectedFromId.value) {
@@ -83,11 +147,20 @@ function handleSubmit() {
     return;
   }
 
+  let timestamp = Date.now();
+  if (dateTimeInput.value) {
+    const parsed = new Date(dateTimeInput.value).getTime();
+    if (!isNaN(parsed)) {
+      timestamp = parsed;
+    }
+  }
+
   emit('submit', {
     from_node_id: selectedFromId.value,
     to_node_id: selectedToId.value,
     amount,
-    memo: memoInput.value
+    memo: memoInput.value,
+    timestamp
   });
   emit('close');
 }
@@ -172,9 +245,47 @@ function handleSubmit() {
           </div>
         </div>
 
-        <!-- 4. 備註 (選填) -->
+        <!-- 4. 交易時間 (自訂與快捷按鍵) -->
         <div class="field-group">
-          <div class="field-label">4. 交易備註 (選填)</div>
+          <div class="field-label">4. 交易時間 (TIME)</div>
+          <div class="datetime-control-container">
+            <div class="quick-date-pills">
+              <button
+                type="button"
+                class="date-pill-btn"
+                :class="{ active: activeQuickDate === 'now' }"
+                @click="setQuickDate('now')"
+              >
+                ⚡ 現在
+              </button>
+              <button
+                type="button"
+                class="date-pill-btn"
+                :class="{ active: activeQuickDate === 'yesterday' }"
+                @click="setQuickDate('yesterday')"
+              >
+                昨天
+              </button>
+              <button
+                type="button"
+                class="date-pill-btn"
+                :class="{ active: activeQuickDate === 'beforeYesterday' }"
+                @click="setQuickDate('beforeYesterday')"
+              >
+                前天
+              </button>
+            </div>
+            <input
+              v-model="dateTimeInput"
+              type="datetime-local"
+              class="datetime-input font-mono"
+            />
+          </div>
+        </div>
+
+        <!-- 5. 備註 (選填) -->
+        <div class="field-group">
+          <div class="field-label">5. 交易備註 (選填)</div>
           <input
             v-model="memoInput"
             type="text"
@@ -183,8 +294,10 @@ function handleSubmit() {
             maxlength="40"
           />
         </div>
+      </div>
 
-        <!-- 提交按鈕 -->
+      <!-- 底部固定操作區 -->
+      <div class="sheet-footer">
         <button class="submit-action-btn" @click="handleSubmit">
           🧾 開立並保存收據
         </button>
@@ -260,11 +373,19 @@ function handleSubmit() {
 }
 
 .sheet-content {
-  padding: 16px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  flex: 1;
+  padding: 16px 20px 12px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.sheet-footer {
+  padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-surface);
+  flex-shrink: 0;
 }
 
 .error-banner {
@@ -382,6 +503,62 @@ function handleSubmit() {
   border-color: var(--text-primary);
 }
 
+.datetime-control-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-date-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.date-pill-btn {
+  flex: 1;
+  background-color: var(--bg-container);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-pill-btn:hover {
+  background-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+.date-pill-btn.active {
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.datetime-input {
+  width: 100%;
+  background-color: var(--bg-container);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.datetime-input:focus {
+  border-color: var(--text-primary);
+}
+
 .submit-action-btn {
   width: 100%;
   background-color: var(--text-primary);
@@ -392,7 +569,7 @@ function handleSubmit() {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 6px;
+  margin-top: 0;
   box-shadow: var(--shadow-md);
   transition: all 0.2s ease;
 }

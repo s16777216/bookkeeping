@@ -44,6 +44,7 @@ async function handleEntrySubmit(payload: {
   to_node_id: string;
   amount: number;
   memo: string;
+  timestamp?: number;
 }) {
   await createEdge(payload);
 }
