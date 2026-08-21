@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import type { FinanceNode } from '../types/finance';
+import { ref, computed, watch, onUnmounted } from "vue";
+import type { FinanceNode } from "../types/finance";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -9,26 +9,73 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'submit', payload: {
-    from_node_id: string;
-    to_node_id: string;
-    amount: number;
-    memo: string;
-    timestamp: number;
-  }): void;
+  (e: "close"): void;
+  (
+    e: "submit",
+    payload: {
+      from_node_id: string;
+      to_node_id: string;
+      amount: number;
+      memo: string;
+      timestamp: number;
+    },
+  ): void;
 }>();
 
-const selectedFromId = ref<string>('');
-const selectedToId = ref<string>('');
-const amountInput = ref<string>('');
-const memoInput = ref<string>('');
-const dateTimeInput = ref<string>('');
-const errorMessage = ref<string>('');
+const selectedFromId = ref<string>("");
+const selectedToId = ref<string>("");
+const amountInput = ref<string>("");
+const memoInput = ref<string>("");
+const dateTimeInput = ref<string>("");
+const errorMessage = ref<string>("");
+
+// 下拉拖曳手勢關閉狀態與閥值
+const DISMISS_THRESHOLD = 200; // 下拉超過 130px 才觸發關閉，防誤觸
+const dragOffsetY = ref<number>(0);
+const isDragging = ref<boolean>(false);
+let touchStartY = 0;
+
+function handleTouchStart(e: TouchEvent) {
+  if (e.touches.length !== 1) return;
+  touchStartY = e.touches[0].clientY;
+  isDragging.value = true;
+}
+
+function handleTouchMove(e: TouchEvent) {
+  if (!isDragging.value) return;
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - touchStartY;
+  if (deltaY > 0) {
+    dragOffsetY.value = deltaY;
+  } else {
+    dragOffsetY.value = 0;
+  }
+}
+
+function handleTouchEnd() {
+  if (!isDragging.value) return;
+  isDragging.value = false;
+  if (dragOffsetY.value >= DISMISS_THRESHOLD) {
+    emit("close");
+  }
+  dragOffsetY.value = 0;
+}
+
+// 鍵盤 Escape 關閉監聽
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Escape" && props.isOpen) {
+    emit("close");
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+  document.body.style.overflow = "";
+});
 
 // 本地時間格式化工具函式 (YYYY-MM-DDTHH:mm)
 function toLocalISOString(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
   const YYYY = d.getFullYear();
   const MM = pad(d.getMonth() + 1);
   const DD = pad(d.getDate());
@@ -38,7 +85,9 @@ function toLocalISOString(d: Date): string {
 }
 
 // 計算當前選中的快捷標籤（雙向連動）
-const activeQuickDate = computed<'now' | 'yesterday' | 'beforeYesterday' | null>(() => {
+const activeQuickDate = computed<
+  "now" | "yesterday" | "beforeYesterday" | null
+>(() => {
   if (!dateTimeInput.value) return null;
   const inputDate = new Date(dateTimeInput.value);
   if (isNaN(inputDate.getTime())) return null;
@@ -54,14 +103,14 @@ const activeQuickDate = computed<'now' | 'yesterday' | 'beforeYesterday' | null>
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
 
-  if (isSameDate(inputDate, today)) return 'now';
-  if (isSameDate(inputDate, yesterday)) return 'yesterday';
-  if (isSameDate(inputDate, beforeYesterday)) return 'beforeYesterday';
+  if (isSameDate(inputDate, today)) return "now";
+  if (isSameDate(inputDate, yesterday)) return "yesterday";
+  if (isSameDate(inputDate, beforeYesterday)) return "beforeYesterday";
   return null;
 });
 
-function setQuickDate(type: 'now' | 'yesterday' | 'beforeYesterday') {
-  if (type === 'now') {
+function setQuickDate(type: "now" | "yesterday" | "beforeYesterday") {
+  if (type === "now") {
     dateTimeInput.value = toLocalISOString(new Date());
     return;
   }
@@ -71,9 +120,9 @@ function setQuickDate(type: 'now' | 'yesterday' | 'beforeYesterday') {
   const base = isNaN(current.getTime()) ? new Date() : current;
 
   const target = new Date();
-  if (type === 'yesterday') {
+  if (type === "yesterday") {
     target.setDate(target.getDate() - 1);
-  } else if (type === 'beforeYesterday') {
+  } else if (type === "beforeYesterday") {
     target.setDate(target.getDate() - 2);
   }
   target.setHours(base.getHours(), base.getMinutes(), 0, 0);
@@ -83,21 +132,25 @@ function setQuickDate(type: 'now' | 'yesterday' | 'beforeYesterday') {
 // 分類節點群組
 const fromNodes = computed(() => {
   // 來源可以是：資產 (轉帳/消費) 或 收入 (薪資/獲利)
-  return props.nodes.filter((n) => n.type === 'asset' || n.type === 'income');
+  return props.nodes.filter((n) => n.type === "asset" || n.type === "income");
 });
 
 const toNodes = computed(() => {
   // 去向可以是：支出 (消費) 或 資產 (存入/轉帳)
-  return props.nodes.filter((n) => n.type === 'expense' || n.type === 'asset');
+  return props.nodes.filter((n) => n.type === "expense" || n.type === "asset");
 });
 
 watch(
   () => props.isOpen,
   (open) => {
+    dragOffsetY.value = 0;
+    isDragging.value = false;
     if (open) {
-      errorMessage.value = '';
-      amountInput.value = '';
-      memoInput.value = '';
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+      errorMessage.value = "";
+      amountInput.value = "";
+      memoInput.value = "";
       // 每次開啟抽屜一律重設為當前時刻
       dateTimeInput.value = toLocalISOString(new Date());
 
@@ -107,17 +160,21 @@ watch(
         selectedFromId.value = fromNodes.value[0].id;
       }
 
-      const defaultExpense = toNodes.value.find((n) => n.type === 'expense');
+      const defaultExpense = toNodes.value.find((n) => n.type === "expense");
       if (defaultExpense && !selectedToId.value) {
         selectedToId.value = defaultExpense.id;
       }
+    } else {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
     }
-  }
+  },
+  { immediate: true },
 );
 
 function appendNumber(num: string) {
-  if (num === '.' && amountInput.value.includes('.')) return;
-  if (amountInput.value === '0' && num !== '.') {
+  if (num === "." && amountInput.value.includes(".")) return;
+  if (amountInput.value === "0" && num !== ".") {
     amountInput.value = num;
   } else {
     amountInput.value += num;
@@ -125,7 +182,7 @@ function appendNumber(num: string) {
 }
 
 function clearNumber() {
-  amountInput.value = '';
+  amountInput.value = "";
 }
 
 function backspaceNumber() {
@@ -135,15 +192,15 @@ function backspaceNumber() {
 function handleSubmit() {
   const amount = parseFloat(amountInput.value);
   if (isNaN(amount) || amount <= 0) {
-    errorMessage.value = '請輸入大於 0 的有效金額';
+    errorMessage.value = "請輸入大於 0 的有效金額";
     return;
   }
   if (!selectedFromId.value || !selectedToId.value) {
-    errorMessage.value = '請選取資金來源與資金終點節點';
+    errorMessage.value = "請選取資金來源與資金終點節點";
     return;
   }
   if (selectedFromId.value === selectedToId.value) {
-    errorMessage.value = '來源帳戶與終點帳戶不能相同';
+    errorMessage.value = "來源帳戶與終點帳戶不能相同";
     return;
   }
 
@@ -155,158 +212,228 @@ function handleSubmit() {
     }
   }
 
-  emit('submit', {
+  emit("submit", {
     from_node_id: selectedFromId.value,
     to_node_id: selectedToId.value,
     amount,
     memo: memoInput.value,
-    timestamp
+    timestamp,
   });
-  emit('close');
+  emit("close");
 }
 </script>
 
 <template>
-  <div v-if="props.isOpen" class="sheet-overlay" @click.self="emit('close')">
-    <div class="sheet-container animate-slide-up">
-      <!-- 頂部拉桿與標題 -->
-      <div class="sheet-header">
-        <div class="sheet-drag-handle"></div>
-        <div class="sheet-title-row">
-          <span class="sheet-title">🧾 記一筆款項流向</span>
-          <button class="sheet-close-btn" @click="emit('close')">✕</button>
-        </div>
-      </div>
-
-      <div class="sheet-content">
-        <!-- 錯誤提示 -->
-        <div v-if="errorMessage" class="error-banner">
-          {{ errorMessage }}
-        </div>
-
-        <!-- 1. 資金起點 (From Node) -->
-        <div class="field-group">
-          <div class="field-label">1. 資金來源 (從哪裡出款)</div>
-          <div class="node-selector-grid">
-            <button
-              v-for="node in fromNodes"
-              :key="node.id"
-              type="button"
-              class="selector-pill"
-              :class="{ selected: selectedFromId === node.id }"
-              @click="selectedFromId = node.id"
-            >
-              <span>{{ node.icon }}</span>
-              <span>{{ node.name }}</span>
-            </button>
+  <Transition name="sheet">
+    <div
+      v-if="props.isOpen"
+      class="sheet-overlay"
+      @click.self="emit('close')"
+      @touchmove.self.prevent
+    >
+      <div
+        class="sheet-container"
+        :style="{
+          transform:
+            isDragging || dragOffsetY > 0
+              ? `translateY(${dragOffsetY}px)`
+              : undefined,
+          transition: isDragging ? 'none' : undefined,
+        }"
+      >
+        <!-- 頂部拉桿與標題 -->
+        <div
+          class="sheet-header"
+          @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd"
+        >
+          <div class="sheet-drag-handle"></div>
+          <div class="sheet-title-row">
+            <span class="sheet-title">🧾 記一筆款項流向</span>
+            <button class="sheet-close-btn" @click="emit('close')">✕</button>
           </div>
         </div>
 
-        <!-- 2. 資金終點 (To Node) -->
-        <div class="field-group">
-          <div class="field-label">2. 資金去向 (流向何處)</div>
-          <div class="node-selector-grid">
-            <button
-              v-for="node in toNodes"
-              :key="node.id"
-              type="button"
-              class="selector-pill"
-              :class="{ selected: selectedToId === node.id }"
-              @click="selectedToId = node.id"
-            >
-              <span>{{ node.icon }}</span>
-              <span>{{ node.name }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 3. 金額輸入 (大型顯示 + 數字鍵盤) -->
-        <div class="field-group">
-          <div class="field-label">3. 金額 (AMOUNT)</div>
-          <div class="amount-display-box font-mono">
-            <span class="amount-prefix">NT$</span>
-            <span class="amount-value">{{ amountInput || '0' }}</span>
+        <div class="sheet-content">
+          <!-- 錯誤提示 -->
+          <div v-if="errorMessage" class="error-banner">
+            {{ errorMessage }}
           </div>
 
-          <!-- 數字鍵盤 -->
-          <div class="keypad-grid font-mono">
-            <button type="button" class="key-btn" @click="appendNumber('1')">1</button>
-            <button type="button" class="key-btn" @click="appendNumber('2')">2</button>
-            <button type="button" class="key-btn" @click="appendNumber('3')">3</button>
-            <button type="button" class="key-btn" @click="appendNumber('4')">4</button>
-            <button type="button" class="key-btn" @click="appendNumber('5')">5</button>
-            <button type="button" class="key-btn" @click="appendNumber('6')">6</button>
-            <button type="button" class="key-btn" @click="appendNumber('7')">7</button>
-            <button type="button" class="key-btn" @click="appendNumber('8')">8</button>
-            <button type="button" class="key-btn" @click="appendNumber('9')">9</button>
-            <button type="button" class="key-btn clear-key" @click="clearNumber">C</button>
-            <button type="button" class="key-btn" @click="appendNumber('0')">0</button>
-            <button type="button" class="key-btn" @click="backspaceNumber">⌫</button>
-          </div>
-        </div>
-
-        <!-- 4. 交易時間 (自訂與快捷按鍵) -->
-        <div class="field-group">
-          <div class="field-label">4. 交易時間 (TIME)</div>
-          <div class="datetime-control-container">
-            <div class="quick-date-pills">
+          <!-- 1. 資金起點 (From Node) -->
+          <div class="field-group">
+            <div class="field-label">1. 資金來源 (從哪裡出款)</div>
+            <div class="node-selector-grid">
               <button
+                v-for="node in fromNodes"
+                :key="node.id"
                 type="button"
-                class="date-pill-btn"
-                :class="{ active: activeQuickDate === 'now' }"
-                @click="setQuickDate('now')"
+                class="selector-pill"
+                :class="{ selected: selectedFromId === node.id }"
+                @click="selectedFromId = node.id"
               >
-                ⚡ 現在
-              </button>
-              <button
-                type="button"
-                class="date-pill-btn"
-                :class="{ active: activeQuickDate === 'yesterday' }"
-                @click="setQuickDate('yesterday')"
-              >
-                昨天
-              </button>
-              <button
-                type="button"
-                class="date-pill-btn"
-                :class="{ active: activeQuickDate === 'beforeYesterday' }"
-                @click="setQuickDate('beforeYesterday')"
-              >
-                前天
+                <span>{{ node.icon }}</span>
+                <span>{{ node.name }}</span>
               </button>
             </div>
+          </div>
+
+          <!-- 2. 資金終點 (To Node) -->
+          <div class="field-group">
+            <div class="field-label">2. 資金去向 (流向何處)</div>
+            <div class="node-selector-grid">
+              <button
+                v-for="node in toNodes"
+                :key="node.id"
+                type="button"
+                class="selector-pill"
+                :class="{ selected: selectedToId === node.id }"
+                @click="selectedToId = node.id"
+              >
+                <span>{{ node.icon }}</span>
+                <span>{{ node.name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. 金額輸入 (大型顯示 + 數字鍵盤) -->
+          <div class="field-group">
+            <div class="field-label">3. 金額 (AMOUNT)</div>
+            <div class="amount-display-box font-mono">
+              <span class="amount-prefix">NT$</span>
+              <span class="amount-value">{{ amountInput || "0" }}</span>
+            </div>
+
+            <!-- 數字鍵盤 -->
+            <div class="keypad-grid font-mono">
+              <button type="button" class="key-btn" @click="appendNumber('1')">
+                1
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('2')">
+                2
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('3')">
+                3
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('4')">
+                4
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('5')">
+                5
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('6')">
+                6
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('7')">
+                7
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('8')">
+                8
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('9')">
+                9
+              </button>
+              <button
+                type="button"
+                class="key-btn clear-key"
+                @click="clearNumber"
+              >
+                C
+              </button>
+              <button type="button" class="key-btn" @click="appendNumber('0')">
+                0
+              </button>
+              <button type="button" class="key-btn" @click="backspaceNumber">
+                ⌫
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. 交易時間 (自訂與快捷按鍵) -->
+          <div class="field-group">
+            <div class="field-label">4. 交易時間 (TIME)</div>
+            <div class="datetime-control-container">
+              <div class="quick-date-pills">
+                <button
+                  type="button"
+                  class="date-pill-btn"
+                  :class="{ active: activeQuickDate === 'now' }"
+                  @click="setQuickDate('now')"
+                >
+                  ⚡ 現在
+                </button>
+                <button
+                  type="button"
+                  class="date-pill-btn"
+                  :class="{ active: activeQuickDate === 'yesterday' }"
+                  @click="setQuickDate('yesterday')"
+                >
+                  昨天
+                </button>
+                <button
+                  type="button"
+                  class="date-pill-btn"
+                  :class="{ active: activeQuickDate === 'beforeYesterday' }"
+                  @click="setQuickDate('beforeYesterday')"
+                >
+                  前天
+                </button>
+              </div>
+              <input
+                v-model="dateTimeInput"
+                type="datetime-local"
+                class="datetime-input font-mono"
+              />
+            </div>
+          </div>
+
+          <!-- 5. 備註 (選填) -->
+          <div class="field-group">
+            <div class="field-label">5. 交易備註 (選填)</div>
             <input
-              v-model="dateTimeInput"
-              type="datetime-local"
-              class="datetime-input font-mono"
+              v-model="memoInput"
+              type="text"
+              class="memo-input"
+              placeholder="如：午餐拉麵、高鐵車票..."
+              maxlength="40"
             />
           </div>
         </div>
 
-        <!-- 5. 備註 (選填) -->
-        <div class="field-group">
-          <div class="field-label">5. 交易備註 (選填)</div>
-          <input
-            v-model="memoInput"
-            type="text"
-            class="memo-input"
-            placeholder="如：午餐拉麵、高鐵車票..."
-            maxlength="40"
-          />
+        <!-- 底部固定操作區 -->
+        <div class="sheet-footer">
+          <button class="submit-action-btn" @click="handleSubmit">
+            🧾 開立並保存收據
+          </button>
         </div>
       </div>
-
-      <!-- 底部固定操作區 -->
-      <div class="sheet-footer">
-        <button class="submit-action-btn" @click="handleSubmit">
-          🧾 開立並保存收據
-        </button>
-      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>
+/* Transition 純滑上 / 滑下動畫（抽屜實體滑動，無整體透明度淡化） */
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: background-color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet-enter-active .sheet-container,
+.sheet-leave-active .sheet-container {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet-enter-from,
+.sheet-leave-to {
+  background-color: transparent !important;
+}
+
+.sheet-enter-from .sheet-container,
+.sheet-leave-to .sheet-container {
+  transform: translateY(100%);
+}
+
 .sheet-overlay {
   position: fixed;
   top: 0;
@@ -319,6 +446,7 @@ function handleSubmit() {
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  overscroll-behavior: contain;
 }
 
 .sheet-container {
@@ -332,6 +460,7 @@ function handleSubmit() {
   flex-direction: column;
   box-shadow: var(--shadow-float);
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .sheet-header {
@@ -340,6 +469,13 @@ function handleSubmit() {
   display: flex;
   flex-direction: column;
   align-items: center;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.sheet-header:active {
+  cursor: grabbing;
 }
 
 .sheet-drag-handle {
@@ -376,6 +512,8 @@ function handleSubmit() {
   flex: 1;
   padding: 16px 20px 12px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -433,7 +571,7 @@ function handleSubmit() {
 
 .selector-pill.selected {
   background-color: var(--text-primary);
-  color: #FFFFFF;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -538,7 +676,7 @@ function handleSubmit() {
 .date-pill-btn.active {
   background-color: var(--text-primary);
   border-color: var(--text-primary);
-  color: #FFFFFF;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -562,7 +700,7 @@ function handleSubmit() {
 .submit-action-btn {
   width: 100%;
   background-color: var(--text-primary);
-  color: #FFFFFF;
+  color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
   padding: 14px 0;
