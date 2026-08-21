@@ -22,8 +22,7 @@ const {
   createNode,
   softDeleteNode,
   createEdge,
-  softDeleteEdge,
-  resetToDefaults
+  softDeleteEdge
 } = useGraphEngine();
 
 const currentTab = ref<'ledger' | 'graph' | 'nodes'>('ledger');
@@ -52,18 +51,12 @@ async function handleEntrySubmit(payload: {
 async function handleDeleteEdge(id: string) {
   await softDeleteEdge(id);
 }
-
-async function handleResetData() {
-  if (window.confirm('確定要將資料庫重置為預設示範資料嗎？')) {
-    await resetToDefaults();
-  }
-}
 </script>
 
 <template>
   <div class="app-container">
     <!-- 頂部狀態列 -->
-    <HeaderBar :on-reset-data="handleResetData" />
+    <HeaderBar />
 
     <!-- 1. 收據帳本分頁 (Ledger Tab) -->
     <main v-if="currentTab === 'ledger'" class="tab-content animate-fade-in">

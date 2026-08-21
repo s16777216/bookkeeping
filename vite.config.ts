@@ -8,25 +8,36 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['icon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'LEDGER 極簡收據記帳',
-        short_name: 'LEDGER',
+        name: 'Bookkeeping 極簡收據記帳',
+        short_name: 'Bookkeeping',
         description: '以圖論為核心的 Local-first 極簡收據風格記帳應用',
         theme_color: '#FBFBFA',
         background_color: '#FBFBFA',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: '/bookkeeping/',
+        scope: '/bookkeeping/',
+        id: '/bookkeeping/',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/pwa-512x512.png',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'icon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable any'
           }
         ]
       },

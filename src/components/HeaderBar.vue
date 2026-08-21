@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-
-const props = defineProps<{
-  onResetData: () => void;
-}>();
+import { computed } from "vue";
 
 const formattedDate = computed(() => {
   const d = new Date();
   const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const weekdays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
   const weekday = weekdays[d.getDay()];
   return `${year}.${month}.${day} ${weekday}`;
 });
@@ -19,18 +15,9 @@ const formattedDate = computed(() => {
 <template>
   <header class="header-bar">
     <div class="header-left">
-      <div class="logo-text">LEDGER</div>
       <div class="date-text font-mono">{{ formattedDate }}</div>
     </div>
-    <div class="header-right">
-      <div class="sync-badge">
-        <span class="status-dot"></span>
-        <span class="status-text">100% 本地</span>
-      </div>
-      <button class="reset-btn" title="重置為預設示範資料" @click="props.onResetData">
-        🔄 示範資料
-      </button>
-    </div>
+    <div class="header-right"></div>
   </header>
 </template>
 
