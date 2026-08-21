@@ -517,6 +517,15 @@ function handleSubmit() {
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  /* 隱藏水平捲軸，防止內部元素超出寬度造成左右滑動 */
+  overflow-x: hidden;
+
+  /* 阻擋水平方向的邊界回彈，以及防止觸發原生的滑動導覽手勢 */
+  overscroll-behavior-x: none;
+
+  /* 嚴格限制觸控行為，僅允許垂直平移 */
+  touch-action: pan-y;
 }
 
 .sheet-footer {
