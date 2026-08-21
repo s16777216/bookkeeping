@@ -59,18 +59,14 @@ const emit = defineEmits<{
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  min-height: calc(64px + constant(safe-area-inset-bottom, 0px));
-  min-height: calc(64px + env(safe-area-inset-bottom, 0px));
-  height: calc(64px + constant(safe-area-inset-bottom, 0px));
-  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  min-height: calc(58px + env(safe-area-inset-bottom, 0px));
   background-color: var(--bg-surface);
   border-top: 1px solid var(--border-light);
   display: flex;
   justify-content: space-around;
   align-items: flex-start;
   padding-top: 8px;
-  padding-bottom: constant(safe-area-inset-bottom, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
   z-index: 500;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
