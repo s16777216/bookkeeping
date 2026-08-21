@@ -62,12 +62,15 @@ html, body {
   width: 100%;
   max-width: 480px;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-color);
   position: relative;
+  padding-top: constant(safe-area-inset-top, 0px);
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 70px);
+  padding-bottom: calc(64px + constant(safe-area-inset-bottom, 0px) + 20px);
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 20px);
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.03);
 }
 

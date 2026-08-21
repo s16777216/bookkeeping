@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const props = defineProps<{
-  currentTab: 'ledger' | 'graph' | 'nodes';
+  currentTab: "ledger" | "graph" | "nodes";
 }>();
 
 const emit = defineEmits<{
-  (e: 'changeTab', tab: 'ledger' | 'graph' | 'nodes'): void;
-  (e: 'openEntry'): void;
+  (e: "changeTab", tab: "ledger" | "graph" | "nodes"): void;
+  (e: "openEntry"): void;
 }>();
 </script>
 
@@ -31,7 +31,11 @@ const emit = defineEmits<{
 
     <!-- 中央懸浮主要動作按鈕 -->
     <div class="nav-fab-wrapper">
-      <button class="nav-fab-btn" title="記一筆新收據" @click="emit('openEntry')">
+      <button
+        class="nav-fab-btn"
+        title="記一筆新收據"
+        @click="emit('openEntry')"
+      >
         <span class="fab-plus">＋</span>
       </button>
     </div>
@@ -55,12 +59,17 @@ const emit = defineEmits<{
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 64px;
+  min-height: calc(64px + constant(safe-area-inset-bottom, 0px));
+  min-height: calc(64px + env(safe-area-inset-bottom, 0px));
+  height: calc(64px + constant(safe-area-inset-bottom, 0px));
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
   background-color: var(--bg-surface);
   border-top: 1px solid var(--border-light);
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: constant(safe-area-inset-bottom, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 500;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
@@ -95,8 +104,7 @@ const emit = defineEmits<{
 }
 
 .nav-fab-wrapper {
-  position: relative;
-  top: -14px;
+  transform: translateY(-50%);
 }
 
 .nav-fab-btn {
@@ -104,7 +112,7 @@ const emit = defineEmits<{
   height: 52px;
   border-radius: 50%;
   background-color: var(--text-primary);
-  color: #FFFFFF;
+  color: #ffffff;
   border: 3px solid var(--bg-surface);
   box-shadow: var(--shadow-float);
   display: flex;
