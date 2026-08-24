@@ -1,37 +1,68 @@
 ## ADDED Requirements
 
 ### Requirement: Node Ownership Definition
-所有財務圖論節點 `FinanceNode` SHALL 具備 `owner`（實體主權）屬性，明確劃分該節點為使用者自有的資金蓄水池（`owner: 'me'`）或外部交易對手/商家/他人（`owner: 'external'`）。
+所有財務圖論節點 `FinanceNode` SHALL 具備 `owner` 屬性，值為 `me` 或 `external`。新模型 SHALL 不再將舊 `type` 作為節點的正式分類欄位。
 
-#### Scenario: 建立具有擁有者屬性的新節點
-- **WHEN** 使用者在帳戶與實體管理介面建立新節點
-- **THEN** 系統應允許選擇該節點為「我的資產帳戶」或「外部對手/商家」，並正確將 `owner` 屬性儲存於 IndexedDB
+#### Scenario: 建立主權節點
+- **WHEN** 使用者在帳戶與實體管理介面建立節點
+- **THEN** 系統應允許選擇「我的帳戶」或「外部對象」，並將對應 `owner` 儲存於 IndexedDB
 
-### Requirement: Dynamic Financial Derivation
-圖論運算引擎 SHALL 根據交易邊（Edge）之起點與終點擁有者主權（`fromNode.owner` 與 `toNode.owner`）自動推導該筆交易之財務性質與對總身價之影響。
+#### Scenario: 封存被引用節點
+- **WHEN** 使用者嘗試刪除仍被未封存交易引用的節點
+- **THEN** 系統應封存該節點，使其不再可用於新交易，但歷史與待執行交易仍可解析及顯示
 
-#### Scenario: 跨邊界支出計算 (Me to External)
-- **WHEN** 發生一筆由 `owner: 'me'` 節點（如我的銀行）流向 `owner: 'external'` 節點（如超商）的收據
-- **THEN** 系統應自動將該金額計入總支出，並使我的總身價減少對應金額
+### Requirement: Executed Transaction Derivation
+圖論引擎 SHALL 使用 `executed_at` 是否為空值判斷交易是否已執行。只有已執行交易 SHALL 影響總資產、收入、支出與我的帳戶結餘。
 
-#### Scenario: 跨邊界收入計算 (External to Me)
-- **WHEN** 發生一筆由 `owner: 'external'` 節點（如公司）流向 `owner: 'me'` 節點（如我的錢包）的收據
-- **THEN** 系統應自動將該金額計入總收入，並使我的總身價增加對應金額
+#### Scenario: 已執行跨邊界支出
+- **WHEN** 一筆具有 `executed_at` 的交易由 `owner: 'me'` 節點流向 `owner: 'external'` 節點
+- **THEN** 系統應將該金額計入支出，並使我的總資產減少對應金額
 
-#### Scenario: 內部轉帳計算 (Me to Me)
-- **WHEN** 發生一筆在兩個 `owner: 'me'` 節點之間的流動（如銀行提款至錢包）
-- **THEN** 系統應自動視為內部轉帳，起點餘額減少、終點餘額增加，且我的總身價維持恆定不變
+#### Scenario: 已執行跨邊界收入
+- **WHEN** 一筆具有 `executed_at` 的交易由 `owner: 'external'` 節點流向 `owner: 'me'` 節點
+- **THEN** 系統應將該金額計入收入，並使我的總資產增加對應金額
 
-### Requirement: Debts and Receivables Tracking
-系統 SHALL 支援外部實體節點之結餘計算，當外部對象節點結餘為正數時，自動識別並展示為應收代墊款（或借款債權）。
+#### Scenario: 已執行內部轉帳
+- **WHEN** 一筆具有 `executed_at` 的交易在兩個 `owner: 'me'` 節點間流動
+- **THEN** 系統應更新兩個帳戶結餘，且我的總資產維持不變
 
-#### Scenario: 朋友聚餐代墊與還款結算
-- **WHEN** 使用者從自己的帳戶付款給外部朋友節點（小明）$500，且隨後小明轉帳歸還 $500
-- **THEN** 付款時小明節點結餘應顯示為 +$500（待收代墊款），還款後結餘應平滑歸零
+### Requirement: Pending Settlement Tracking
+系統 SHALL 將未執行的跨邊界交易視為待結算承諾，且不得將它們計入總資產、收入或支出。
 
-### Requirement: Auto-migration of Legacy Node Types
-圖論引擎在載入既有缺少 `owner` 屬性的舊版節點資料時，SHALL 自動平滑映射為新實體主權模型。
+#### Scenario: 待收款與待付款淨額化
+- **WHEN** 同一外部對象存在未執行的 `external -> me` $500 與 `me -> external` $200
+- **THEN** 系統應顯示該對象待收款 $300，而非兩筆毛額
 
-#### Scenario: 舊版四分類資料自動相容
-- **WHEN** 系統讀取舊有的 `asset` / `liability` / `income` / `expense` 節點
-- **THEN** 系統應自動將 `asset` 與 `liability` 映射為 `owner: 'me'`，將 `income` 與 `expense` 映射為 `owner: 'external'`，保證歷史資料完全正常呈現
+#### Scenario: 不同對象不互相抵銷
+- **WHEN** 小明有待收款 $500，且小華有待付款 $200
+- **THEN** 系統應分別顯示待收款 $500 與待付款 $200，且不得合併為單一淨額
+
+#### Scenario: 完成待執行交易
+- **WHEN** 使用者將待執行交易標記完成
+- **THEN** 系統應預設以目前時間寫入 `executed_at`，將交易自待結算清單移除，並立即以該交易重新計算收入、支出與總資產
+
+#### Scenario: 撤回完成交易
+- **WHEN** 使用者撤回一筆已執行交易的完成狀態
+- **THEN** 系統應清除 `executed_at`，使交易回到待結算清單，且不再影響收入、支出與總資產
+
+### Requirement: Transaction Tagging
+系統 SHALL 提供獨立標籤資料表；交易可透過 `tag_ids` 關聯零個或多個標籤。標籤 SHALL 僅表達交易語意，且不得影響圖論財務計算。
+
+#### Scenario: 搜尋或建立標籤
+- **WHEN** 使用者在交易表單輸入標籤名稱
+- **THEN** 系統應先搜尋未封存的既有標籤；未找到時應允許建立名稱正規化後全域唯一的新標籤
+
+#### Scenario: 封存標籤仍顯示於歷史交易
+- **WHEN** 使用者封存一個已被交易引用的標籤
+- **THEN** 新交易不得再選擇該標籤，但既有交易仍應顯示該標籤名稱
+
+### Requirement: Legacy Data Migration
+系統 SHALL 平滑遷移舊版四分類節點與舊版交易，保留既有帳務結果。
+
+#### Scenario: 舊節點主權映射
+- **WHEN** 系統讀取缺少 `owner` 的舊節點
+- **THEN** `asset` 與 `liability` 應映射為 `owner: 'me'`，`income` 與 `expense` 應映射為 `owner: 'external'`
+
+#### Scenario: 舊交易執行日期映射
+- **WHEN** 系統讀取只有 `timestamp` 的舊交易
+- **THEN** 系統應將該時間同時作為 `created_at` 與 `executed_at`，並將交易視為已執行
