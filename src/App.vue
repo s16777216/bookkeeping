@@ -1,31 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useGraphEngine } from './composables/useGraphEngine';
-import type { FinanceNode } from './types/finance';
+import { ref, onMounted } from "vue";
+import { useGraphEngine } from "./composables/useGraphEngine";
+import type { FinanceNode } from "./types/finance";
 
-import HeaderBar from './components/HeaderBar.vue';
-import BalanceBanner from './components/BalanceBanner.vue';
-import QuickNodeBar from './components/QuickNodeBar.vue';
-import ReceiptFeed from './components/ReceiptFeed.vue';
-import QuickEntrySheet from './components/QuickEntrySheet.vue';
-import BottomNavBar from './components/BottomNavBar.vue';
-import GraphView from './components/GraphView.vue';
-import NodesView from './components/NodesView.vue';
+import HeaderBar from "./components/HeaderBar.vue";
+import BalanceBanner from "./components/BalanceBanner.vue";
+import QuickNodeBar from "./components/QuickNodeBar.vue";
+import ReceiptFeed from "./components/ReceiptFeed.vue";
+import QuickEntrySheet from "./components/QuickEntrySheet.vue";
+import BottomNavBar from "./components/BottomNavBar.vue";
+import GraphView from "./components/GraphView.vue";
+import NodesView from "./components/NodesView.vue";
 
 const {
   nodes,
   edges,
   nodeMap,
+  tagMap,
   summaryMetrics,
+  pendingReceivables,
+  pendingPayables,
+  tags,
   init,
   getNodeBalance,
   createNode,
-  softDeleteNode,
+  updateNode,
+  archiveNode,
   createEdge,
-  softDeleteEdge
+  completeEdge,
+  undoCompleteEdge,
+  softDeleteEdge,
+  createTag,
+  renameTag,
+  archiveTag,
 } = useGraphEngine();
 
-const currentTab = ref<'ledger' | 'graph' | 'nodes'>('ledger');
+const currentTab = ref<"ledger" | "graph" | "nodes">("ledger");
 const isQuickEntryOpen = ref<boolean>(false);
 const initialFromNode = ref<FinanceNode | null>(null);
 
@@ -43,13 +53,21 @@ async function handleEntrySubmit(payload: {
   to_node_id: string;
   amount: number;
   memo: string;
-  timestamp?: number;
+  executed_at: number | null;
+  tag_ids: string[];
 }) {
   await createEdge(payload);
 }
 
 async function handleDeleteEdge(id: string) {
   await softDeleteEdge(id);
+}
+
+async function handleCompleteEdge(id: string) {
+  await completeEdge(id);
+}
+async function handleUndoEdge(id: string) {
+  await undoCompleteEdge(id);
 }
 </script>
 
@@ -74,7 +92,10 @@ async function handleDeleteEdge(id: string) {
       <ReceiptFeed
         :edges="edges"
         :node-map="nodeMap"
+        :tag-map="tagMap"
         :on-delete-edge="handleDeleteEdge"
+        :on-complete-edge="handleCompleteEdge"
+        :on-undo-edge="handleUndoEdge"
         :on-open-entry="() => handleOpenEntry()"
       />
     </main>
@@ -85,6 +106,8 @@ async function handleDeleteEdge(id: string) {
         :nodes="nodes"
         :metrics="summaryMetrics"
         :get-node-balance="getNodeBalance"
+        :receivables="pendingReceivables"
+        :payables="pendingPayables"
       />
     </main>
 
@@ -93,24 +116,29 @@ async function handleDeleteEdge(id: string) {
       <NodesView
         :nodes="nodes"
         :on-create-node="createNode"
-        :on-delete-node="softDeleteNode"
+        :on-update-node="updateNode"
+        :on-archive-node="archiveNode"
       />
     </main>
-
-    <!-- 底部導航與懸浮記帳按鈕 -->
-    <BottomNavBar
-      :current-tab="currentTab"
-      @change-tab="(tab) => currentTab = tab"
-      @open-entry="() => handleOpenEntry()"
-    />
 
     <!-- 快速連線記帳底部抽屜 -->
     <QuickEntrySheet
       :is-open="isQuickEntryOpen"
       :nodes="nodes"
+      :tags="tags"
       :initial-from-node="initialFromNode"
+      :on-create-tag="createTag"
+      :on-rename-tag="renameTag"
+      :on-archive-tag="archiveTag"
       @close="isQuickEntryOpen = false"
       @submit="handleEntrySubmit"
+    />
+
+    <!-- 底部導航與懸浮記帳按鈕 -->
+    <BottomNavBar
+      :current-tab="currentTab"
+      @change-tab="(tab) => (currentTab = tab)"
+      @open-entry="() => handleOpenEntry()"
     />
   </div>
 </template>

@@ -1,32 +1,48 @@
-export type NodeType = 'asset' | 'liability' | 'income' | 'expense';
+export type NodeOwner = "me" | "external";
+export type LegacyNodeType = "asset" | "liability" | "income" | "expense";
 
 export interface FinanceNode {
-  id: string;          // ULID
-  name: string;        // 顯示名稱 (如: 玉山銀行, 現金皮夾, 薪資, 餐飲飲食)
-  type: NodeType;      // 節點類型
-  currency?: string;   // 預設 'TWD'
-  icon?: string;       // 圖示 (如: 🏦, 👛, 💳, 🍜, 🚇)
-  color?: string;      // 節點標籤色
-  updated_at: number;  // 毫秒時間戳記 (LWW)
-  is_deleted: boolean; // 軟刪除標記
+  id: string;
+  name: string;
+  owner: NodeOwner;
+  currency?: string;
+  icon?: string;
+  color?: string;
+  updated_at: number;
+  is_deleted: boolean;
+}
+
+export interface FinanceTag {
+  id: string;
+  name: string;
+  normalized_name: string;
+  updated_at: number;
+  is_deleted: boolean;
 }
 
 export interface FinanceEdge {
-  id: string;          // ULID
-  from_node_id: string;// 資金起點 ID
-  to_node_id: string;  // 資金終點 ID
-  amount: number;      // 交易金額 (正數)
-  timestamp: number;   // 交易發生時間
-  memo?: string;       // 備註 (如: 午餐排骨便當)
-  receipt_no?: string; // 收據編號
-  updated_at: number;  // 毫秒時間戳記 (LWW)
-  is_deleted: boolean; // 軟刪除標記
+  id: string;
+  from_node_id: string;
+  to_node_id: string;
+  amount: number;
+  created_at: number;
+  executed_at: number | null;
+  tag_ids?: string[];
+  memo?: string;
+  receipt_no?: string;
+  updated_at: number;
+  is_deleted: boolean;
 }
 
 export interface SummaryMetrics {
   totalAssets: number;
-  totalLiabilities: number;
   totalIncome: number;
   totalExpense: number;
-  netWorth: number;
+  totalReceivables: number;
+  totalPayables: number;
+}
+
+export interface CounterpartyBalance {
+  node: FinanceNode;
+  amount: number;
 }

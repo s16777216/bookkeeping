@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { SummaryMetrics } from '../types/finance';
+import type { SummaryMetrics } from "../types/finance";
 
 const props = defineProps<{
   metrics: SummaryMetrics;
 }>();
 
 function formatAmount(amount: number): string {
-  return new Intl.NumberFormat('zh-TW').format(amount);
+  return new Intl.NumberFormat("zh-TW").format(amount);
 }
 </script>
 
@@ -15,7 +15,8 @@ function formatAmount(amount: number): string {
     <div class="banner-card">
       <div class="balance-label">總資產 TOTAL BALANCE</div>
       <div class="balance-amount font-mono">
-        <span class="currency-symbol">$</span>{{ formatAmount(props.metrics.totalAssets) }}
+        <span class="currency-symbol">$</span
+        >{{ formatAmount(props.metrics.totalAssets) }}
         <span class="currency-unit">TWD</span>
       </div>
 
@@ -35,6 +36,10 @@ function formatAmount(amount: number): string {
             -${{ formatAmount(props.metrics.totalExpense) }}
           </div>
         </div>
+      </div>
+      <div class="pending-row">
+        <span>待收 ${{ formatAmount(props.metrics.totalReceivables) }}</span>
+        <span>待付 ${{ formatAmount(props.metrics.totalPayables) }}</span>
       </div>
     </div>
   </div>
@@ -87,7 +92,11 @@ function formatAmount(amount: number): string {
 
 .metrics-divider {
   height: 1px;
-  background-image: linear-gradient(to right, var(--border-dashed) 50%, rgba(255,255,255,0) 0%);
+  background-image: linear-gradient(
+    to right,
+    var(--border-dashed) 50%,
+    rgba(255, 255, 255, 0) 0%
+  );
   background-position: top;
   background-size: 8px 1px;
   background-repeat: repeat-x;
@@ -121,5 +130,15 @@ function formatAmount(amount: number): string {
   width: 1px;
   height: 24px;
   background-color: var(--border-light);
+}
+
+.pending-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-light);
+  font-size: 11px;
+  color: var(--text-secondary);
 }
 </style>

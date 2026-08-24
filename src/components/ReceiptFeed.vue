@@ -1,125 +1,77 @@
 <script setup lang="ts">
-import type { FinanceEdge, FinanceNode } from '../types/finance';
-import ReceiptCard from './ReceiptCard.vue';
-
+import { computed } from "vue";
+import type { FinanceEdge, FinanceNode, FinanceTag } from "../types/finance";
+import ReceiptCard from "./ReceiptCard.vue";
 const props = defineProps<{
   edges: FinanceEdge[];
   nodeMap: Map<string, FinanceNode>;
+  tagMap: Map<string, FinanceTag>;
   onDeleteEdge: (id: string) => void;
+  onCompleteEdge: (id: string) => void;
+  onUndoEdge: (id: string) => void;
   onOpenEntry: () => void;
 }>();
+const pending = computed(() => props.edges.filter((edge) => !edge.executed_at));
+const executed = computed(() => props.edges.filter((edge) => edge.executed_at));
 </script>
-
 <template>
   <div class="receipt-feed-container">
     <div class="feed-header-row">
-      <div class="feed-title">近期收據明細 RECENT RECEIPTS</div>
-      <div class="receipt-count font-mono">{{ props.edges.length }} 筆</div>
+      <b>收據帳本</b><button @click="props.onOpenEntry">＋ 記帳</button>
     </div>
-
-    <!-- 收據清單 -->
-    <div v-if="props.edges.length > 0" class="receipt-list">
+    <section v-if="pending.length">
+      <h3>待執行（應收／應付）</h3>
       <ReceiptCard
-        v-for="edge in props.edges"
+        v-for="edge in pending"
         :key="edge.id"
         :edge="edge"
-        :node-map="props.nodeMap"
+        :node-map="nodeMap"
+        :tag-map="tagMap"
         @delete="props.onDeleteEdge"
+        @complete="props.onCompleteEdge"
+        @undo="props.onUndoEdge"
       />
-    </div>
-
-    <!-- 空狀態 -->
-    <div v-else class="empty-state">
-      <div class="empty-icon">🧾</div>
-      <div class="empty-title">目前尚無收據紀錄</div>
-      <div class="empty-subtitle">點擊下方按鈕或頂部帳戶快速記錄第一筆資金流動</div>
-      <button class="empty-action-btn" @click="props.onOpenEntry">
-        ＋ 記一筆新收據
-      </button>
-    </div>
+    </section>
+    <section>
+      <h3>已執行交易</h3>
+      <ReceiptCard
+        v-for="edge in executed"
+        :key="edge.id"
+        :edge="edge"
+        :node-map="nodeMap"
+        :tag-map="tagMap"
+        @delete="props.onDeleteEdge"
+        @complete="props.onCompleteEdge"
+        @undo="props.onUndoEdge"
+      />
+      <p v-if="!edges.length" class="empty">尚無交易，開始記一筆吧。</p>
+    </section>
   </div>
 </template>
-
 <style scoped>
 .receipt-feed-container {
   padding: 14px 20px 30px;
   flex: 1;
 }
-
 .feed-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
 }
-
-.feed-title {
+.feed-header-row button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--text-primary);
+  color: #fff;
+}
+h3 {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
   color: var(--text-secondary);
-  text-transform: uppercase;
+  margin: 18px 0 8px;
 }
-
-.receipt-count {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.receipt-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  background-color: var(--bg-surface);
-  border: 1px dashed var(--border-dashed);
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 36px;
-  margin-bottom: 12px;
-  opacity: 0.8;
-}
-
-.empty-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.empty-subtitle {
+.empty {
+  color: var(--text-secondary);
   font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 18px;
-  line-height: 1.5;
-}
-
-.empty-action-btn {
-  background-color: var(--text-primary);
-  color: #FFFFFF;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.empty-action-btn:hover {
-  background-color: #333333;
-}
-
-.empty-action-btn:active {
-  transform: scale(0.96);
 }
 </style>

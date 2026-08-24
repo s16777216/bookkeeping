@@ -1,34 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { FinanceNode, NodeType } from '../types/finance';
+import { computed, ref } from "vue";
+import type { FinanceNode, NodeOwner } from "../types/finance";
 
 const props = defineProps<{
   nodes: FinanceNode[];
-  onCreateNode: (payload: { name: string; type: NodeType; icon?: string }) => Promise<FinanceNode>;
-  onDeleteNode: (id: string) => Promise<void>;
+  onCreateNode: (payload: {
+    name: string;
+    owner: NodeOwner;
+    icon?: string;
+  }) => Promise<FinanceNode>;
+  onUpdateNode: (
+    id: string,
+    updates: Partial<Omit<FinanceNode, "id" | "updated_at">>,
+  ) => Promise<void>;
+  onArchiveNode: (id: string) => Promise<void>;
 }>();
-
-const isAdding = ref(false);
-const newName = ref('');
-const newType = ref<NodeType>('expense');
-const newIcon = ref('🏷️');
-
-const typeOptions: { label: string; value: NodeType }[] = [
-  { label: '資產 (銀行/錢包)', value: 'asset' },
-  { label: '支出分類', value: 'expense' },
-  { label: '收入來源', value: 'income' },
-  { label: '負債 (信用卡/借貸)', value: 'liability' }
-];
-
-async function handleAdd() {
-  if (!newName.value.trim()) return;
+const isAdding = ref(false),
+  name = ref(""),
+  icon = ref("🏦"),
+  owner = ref<NodeOwner>("me"),
+  editingId = ref<string | null>(null);
+const mine = computed(() => props.nodes.filter((node) => node.owner === "me"));
+const external = computed(() =>
+  props.nodes.filter((node) => node.owner === "external"),
+);
+async function add() {
+  if (!name.value.trim()) return;
   await props.onCreateNode({
-    name: newName.value.trim(),
-    type: newType.value,
-    icon: newIcon.value
+    name: name.value,
+    owner: owner.value,
+    icon: icon.value,
   });
-  newName.value = '';
+  name.value = "";
   isAdding.value = false;
+}
+async function archive(node: FinanceNode) {
+  if (confirm(`封存「${node.name}」？歷史交易會保留。`))
+    await props.onArchiveNode(node.id);
 }
 </script>
 
@@ -36,51 +44,57 @@ async function handleAdd() {
   <div class="nodes-view-container animate-fade-in">
     <div class="view-header">
       <div>
-        <div class="view-title">💼 帳戶與分類管理</div>
-        <div class="view-subtitle">自訂資金起點（資產/收入）與終點（支出/負債）</div>
+        <div class="view-title">💼 帳戶與對象管理</div>
+        <div class="view-subtitle">我的帳戶與外部對象以資金主權區分</div>
       </div>
-      <button class="add-node-btn" @click="isAdding = !isAdding">
-        {{ isAdding ? '取消' : '＋ 新增節點' }}
+      <button @click="isAdding = !isAdding">
+        {{ isAdding ? "取消" : "＋ 新增" }}
       </button>
     </div>
-
-    <!-- 新增節點表單 -->
-    <div v-if="isAdding" class="add-form-card">
-      <div class="form-title">新增圖論節點</div>
-      <div class="form-row">
-        <label>節點名稱</label>
-        <input v-model="newName" type="text" placeholder="如：聯邦信用卡、星巴克咖啡..." />
+    <form v-if="isAdding" class="panel" @submit.prevent="add">
+      <input
+        v-model="name"
+        placeholder="名稱，例如：我的銀行、小明、便利商店"
+      />
+      <div class="row">
+        <select v-model="owner">
+          <option value="me">我的帳戶</option>
+          <option value="external">外部對象</option></select
+        ><input v-model="icon" maxlength="4" aria-label="圖示" />
       </div>
-      <div class="form-row">
-        <label>節點類型</label>
-        <select v-model="newType">
-          <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>代表 Emoji 圖示</label>
-        <input v-model="newIcon" type="text" maxlength="4" style="width: 60px; text-align: center;" />
-      </div>
-      <button class="save-node-btn" @click="handleAdd">確認建立節點</button>
-    </div>
-
-    <!-- 現有節點清單 -->
-    <div class="nodes-list">
-      <div v-for="node in props.nodes" :key="node.id" class="node-card">
-        <div class="node-left">
-          <span class="node-icon">{{ node.icon || '🏷️' }}</span>
-          <div class="node-texts">
-            <span class="node-name">{{ node.name }}</span>
-            <span class="node-type-tag" :class="`tag-${node.type}`">{{ node.type }}</span>
+      <button>建立節點</button>
+    </form>
+    <section
+      v-for="group in [
+        { title: '我的帳戶', items: mine },
+        { title: '外部對象', items: external },
+      ]"
+      :key="group.title"
+      class="group"
+    >
+      <h3>{{ group.title }}</h3>
+      <div v-if="group.items.length" class="grid">
+        <article v-for="node in group.items" :key="node.id" class="node-card">
+          <span>{{ node.icon || "🏷️" }}</span>
+          <div v-if="editingId !== node.id" class="grow">
+            <strong>{{ node.name }}</strong
+            ><small>{{ node.owner === "me" ? "我的帳戶" : "外部對象" }}</small>
           </div>
-        </div>
-        <button class="node-del-btn" title="軟刪除節點" @click="props.onDeleteNode(node.id)">
-          ✕
-        </button>
+          <input
+            v-else
+            v-model="node.name"
+            class="grow"
+            @keyup.enter="props.onUpdateNode(node.id, { name: node.name })"
+          /><button
+            class="plain"
+            @click="editingId = editingId === node.id ? null : node.id"
+          >
+            ✎</button
+          ><button class="plain danger" @click="archive(node)">封存</button>
+        </article>
       </div>
-    </div>
+      <p v-else class="empty">尚無{{ group.title }}</p>
+    </section>
   </div>
 </template>
 
@@ -88,146 +102,83 @@ async function handleAdd() {
 .nodes-view-container {
   padding: 16px 20px 30px;
 }
-
-.view-header {
+.view-header,
+.row,
+.node-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 8px;
 }
-
+.view-header {
+  justify-content: space-between;
+}
 .view-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
 }
-
-.view-subtitle {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.add-node-btn {
-  background-color: var(--text-primary);
-  color: #FFFFFF;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.add-form-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: var(--shadow-sm);
-}
-
-.form-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.form-row label {
+.view-subtitle,
+small,
+.empty {
   font-size: 11px;
   color: var(--text-secondary);
 }
-
-.form-row input,
-.form-row select {
-  background-color: var(--bg-container);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-size: 13px;
-  outline: none;
-}
-
-.save-node-btn {
-  background-color: var(--text-primary);
-  color: #FFFFFF;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  font-size: 13px;
-  font-weight: 600;
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 11px;
+  background: var(--text-primary);
+  color: #fff;
   cursor: pointer;
-  margin-top: 4px;
 }
-
-.nodes-list {
+.panel,
+.group {
+  margin-top: 16px;
+}
+.panel {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-}
-
-.node-card {
-  background-color: var(--bg-surface);
+  padding: 12px;
+  background: var(--bg-surface);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
 }
-
-.node-left {
-  display: flex;
-  align-items: center;
+.panel input,
+.panel select,
+.node-card input {
+  padding: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--bg-container);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-
-.node-icon {
-  font-size: 18px;
+.node-card {
+  padding: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
 }
-
-.node-texts {
-  display: flex;
-  flex-direction: column;
+.grow {
+  flex: 1;
+  min-width: 0;
 }
-
-.node-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
+.grow strong,
+.grow small {
+  display: block;
 }
-
-.node-type-tag {
-  font-size: 9px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.tag-asset { color: var(--text-primary); font-weight: 600; }
-.tag-income { color: var(--accent-income); font-weight: 600; }
-.tag-expense { color: var(--accent-expense); }
-
-.node-del-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
+.plain {
+  background: transparent;
+  color: var(--text-secondary);
   padding: 4px;
 }
-
-.node-del-btn:hover {
+.danger {
   color: var(--accent-expense);
+}
+h3 {
+  font-size: 12px;
+  margin: 0 0 8px;
 }
 </style>
