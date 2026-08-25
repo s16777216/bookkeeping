@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { FinanceNode, NodeOwner } from "../types/finance";
+import EditNodeSheet from "./EditNodeSheet.vue";
 
 const props = defineProps<{
   nodes: FinanceNode[];
@@ -15,15 +16,20 @@ const props = defineProps<{
   ) => Promise<void>;
   onArchiveNode: (id: string) => Promise<void>;
 }>();
-const isAdding = ref(false),
-  name = ref(""),
-  icon = ref("🏦"),
-  owner = ref<NodeOwner>("me"),
-  editingId = ref<string | null>(null);
+
+const isAdding = ref(false);
+const name = ref("");
+const icon = ref("🏦");
+const owner = ref<NodeOwner>("me");
+
+const selectedNode = ref<FinanceNode | null>(null);
+const isEditSheetOpen = ref(false);
+
 const mine = computed(() => props.nodes.filter((node) => node.owner === "me"));
 const external = computed(() =>
   props.nodes.filter((node) => node.owner === "external"),
 );
+
 async function add() {
   if (!name.value.trim()) return;
   await props.onCreateNode({
@@ -34,9 +40,10 @@ async function add() {
   name.value = "";
   isAdding.value = false;
 }
-async function archive(node: FinanceNode) {
-  if (confirm(`封存「${node.name}」？歷史交易會保留。`))
-    await props.onArchiveNode(node.id);
+
+function openEditSheet(node: FinanceNode) {
+  selectedNode.value = node;
+  isEditSheetOpen.value = true;
 }
 </script>
 
@@ -45,25 +52,29 @@ async function archive(node: FinanceNode) {
     <div class="view-header">
       <div>
         <div class="view-title">💼 帳戶與對象管理</div>
-        <div class="view-subtitle">我的帳戶與外部對象以資金主權區分</div>
+        <div class="view-subtitle">點擊任一節點卡片即可進行編輯或封存</div>
       </div>
-      <button @click="isAdding = !isAdding">
+      <button class="add-btn" @click="isAdding = !isAdding">
         {{ isAdding ? "取消" : "＋ 新增" }}
       </button>
     </div>
+
     <form v-if="isAdding" class="panel" @submit.prevent="add">
       <input
         v-model="name"
         placeholder="名稱，例如：我的銀行、小明、便利商店"
+        maxlength="30"
       />
       <div class="row">
         <select v-model="owner">
           <option value="me">我的帳戶</option>
-          <option value="external">外部對象</option></select
-        ><input v-model="icon" maxlength="4" aria-label="圖示" />
+          <option value="external">外部對象</option>
+        </select>
+        <input v-model="icon" maxlength="4" aria-label="圖示" class="icon-input" />
       </div>
-      <button>建立節點</button>
+      <button class="submit-btn">建立節點</button>
     </form>
+
     <section
       v-for="group in [
         { title: '我的帳戶', items: mine },
@@ -74,27 +85,31 @@ async function archive(node: FinanceNode) {
     >
       <h3>{{ group.title }}</h3>
       <div v-if="group.items.length" class="grid">
-        <article v-for="node in group.items" :key="node.id" class="node-card">
-          <span>{{ node.icon || "🏷️" }}</span>
-          <div v-if="editingId !== node.id" class="grow">
-            <strong>{{ node.name }}</strong
-            ><small>{{ node.owner === "me" ? "我的帳戶" : "外部對象" }}</small>
+        <article
+          v-for="node in group.items"
+          :key="node.id"
+          class="node-card"
+          @click="openEditSheet(node)"
+        >
+          <span class="node-icon">{{ node.icon || "🏷️" }}</span>
+          <div class="grow">
+            <strong>{{ node.name }}</strong>
+            <small>{{ node.owner === "me" ? "我的帳戶" : "外部對象" }}</small>
           </div>
-          <input
-            v-else
-            v-model="node.name"
-            class="grow"
-            @keyup.enter="props.onUpdateNode(node.id, { name: node.name })"
-          /><button
-            class="plain"
-            @click="editingId = editingId === node.id ? null : node.id"
-          >
-            ✎</button
-          ><button class="plain danger" @click="archive(node)">封存</button>
+          <span class="edit-hint">✎</span>
         </article>
       </div>
       <p v-else class="empty">尚無{{ group.title }}</p>
     </section>
+
+    <!-- 節點編輯底部抽屜 -->
+    <EditNodeSheet
+      :is-open="isEditSheetOpen"
+      :node="selectedNode"
+      :on-update="props.onUpdateNode"
+      :on-archive="props.onArchiveNode"
+      @close="isEditSheetOpen = false"
+    />
   </div>
 </template>
 
@@ -102,14 +117,9 @@ async function archive(node: FinanceNode) {
 .nodes-view-container {
   padding: 16px 20px 30px;
 }
-.view-header,
-.row,
-.node-card {
+.view-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-.view-header {
   justify-content: space-between;
 }
 .view-title {
@@ -122,13 +132,15 @@ small,
   font-size: 11px;
   color: var(--text-secondary);
 }
-button {
+.add-btn {
   border: 0;
   border-radius: 8px;
-  padding: 8px 11px;
+  padding: 8px 12px;
   background: var(--text-primary);
   color: #fff;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
 }
 .panel,
 .group {
@@ -143,42 +155,92 @@ button {
   border-radius: 12px;
 }
 .panel input,
-.panel select,
-.node-card input {
-  padding: 8px;
+.panel select {
+  padding: 10px 12px;
   border: 1px solid var(--border-light);
   border-radius: 8px;
-  background: var(--bg-container);
+  font-size: 14px;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  outline: none;
+}
+.icon-input {
+  width: 60px;
+  text-align: center;
+}
+.row {
+  display: flex;
+  gap: 8px;
+}
+.submit-btn {
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.group h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
 }
 .node-card {
-  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
   background: var(--bg-surface);
   border: 1px solid var(--border-light);
-  border-radius: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.node-card:hover {
+  border-color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+.node-icon {
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-main);
+  border-radius: 8px;
 }
 .grow {
   flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.grow strong,
-.grow small {
-  display: block;
+.grow strong {
+  font-size: 14px;
+  color: var(--text-primary);
 }
-.plain {
-  background: transparent;
+.edit-hint {
+  font-size: 14px;
   color: var(--text-secondary);
-  padding: 4px;
+  opacity: 0.5;
 }
-.danger {
-  color: var(--accent-expense);
+.node-card:hover .edit-hint {
+  opacity: 1;
 }
-h3 {
-  font-size: 12px;
-  margin: 0 0 8px;
+.empty {
+  padding: 20px;
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-light);
+  border-radius: 12px;
 }
 </style>
