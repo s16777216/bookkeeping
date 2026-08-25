@@ -15,6 +15,10 @@ const formattedDate = computed(() => {
 <template>
   <header class="header-bar">
     <div class="header-left">
+      <div class="brand-row">
+        <img src="/icon.png" alt="Bookkeeping Logo" class="brand-logo" />
+        <span class="logo-text">BOOKKEEPING</span>
+      </div>
       <div class="date-text font-mono">{{ formattedDate }}</div>
     </div>
     <div class="header-right"></div>
@@ -36,10 +40,23 @@ const formattedDate = computed(() => {
   flex-direction: column;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm, 6px);
+  object-fit: cover;
+}
+
 .logo-text {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-primary);
 }
 
