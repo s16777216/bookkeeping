@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'bookeeping 極簡收據記帳',
-        short_name: 'bookeeping',
+        name: 'Bookeeping 收據記帳',
+        short_name: 'Bookeeping',
         description: '以圖論為核心的 Local-first 極簡收據風格記帳應用',
         theme_color: '#FBFBFA',
         background_color: '#FBFBFA',

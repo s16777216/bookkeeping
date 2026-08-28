@@ -16,7 +16,7 @@ const formattedDate = computed(() => {
   <header class="header-bar">
     <div class="header-left">
       <div class="brand-row">
-        <img src="/icon.png" alt="bookeeping Logo" class="brand-logo" />
+        <img src="/icon.png" alt="Bookeeping Logo" class="brand-logo" />
         <span class="logo-text">BOOKEEPING</span>
       </div>
       <div class="date-text font-mono">{{ formattedDate }}</div>

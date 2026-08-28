@@ -1,1 +1,21 @@
-{"root":["./src/main.ts","./src/composables/usegraphengine.ts","./src/db/index.ts","./src/db/seeds.ts","./src/types/finance.ts","./src/app.vue","./src/components/balancebanner.vue","./src/components/bottomnavbar.vue","./src/components/graphview.vue","./src/components/headerbar.vue","./src/components/nodesview.vue","./src/components/quickentrysheet.vue","./src/components/quicknodebar.vue","./src/components/receiptcard.vue","./src/components/receiptfeed.vue"],"version":"5.6.3"}
+{
+  "root": [
+    "./src/main.ts",
+    "./src/composables/usegraphengine.ts",
+    "./src/db/index.ts",
+    "./src/db/seeds.ts",
+    "./src/types/finance.ts",
+    "./src/app.vue",
+    "./src/components/balancebanner.vue",
+    "./src/components/bottomnavbar.vue",
+    "./src/components/editnodesheet.vue",
+    "./src/components/graphview.vue",
+    "./src/components/headerbar.vue",
+    "./src/components/nodesview.vue",
+    "./src/components/quickentrysheet.vue",
+    "./src/components/quicknodebar.vue",
+    "./src/components/receiptcard.vue",
+    "./src/components/receiptfeed.vue"
+  ],
+  "version": "5.6.3"
+}
