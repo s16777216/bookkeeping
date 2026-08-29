@@ -1,24 +1,41 @@
 ## Why
 
-在記帳流程中，輸入金額使用手機原生軟鍵盤容易推擠畫面、彈出收合延遲，且無法直接進行連續算式計算（例如外食合算 `85 + 35`）。同時，隨著記帳抽屜欄位增加（標籤、待執行切換），送出按鈕若置於可滾動內容底部，會導致使用者每次都需滾動至最下方才能儲存。
+在記帳流程中，輸入金額使用手機原生軟鍵盤容易推擠畫面、彈出收合延遲，且無法直接進行連續算式計算（例如外食合算、多筆加總扣除）。先前簡化的字串解析小算盤缺乏實體與手機計算機的互動直覺（例如運算符高亮、暫存器流暢切換、AC/C 動態切換、等號明確結算等）。
 
-導入「自製記帳小算盤鍵盤」並將「儲存按鈕固定於抽屜底部」，能夠大幅提升單手記帳流暢度與專業手感。
+為了打造極致的單手記帳體驗，本提案旨在**「深度復刻 iOS 計算機的核心狀態機與操作手感」**，維持專案現有的黑白極簡收據風格，導入標準 iOS 5 列佈局，並結合 iOS 18 歷史算式條設計，確保算式全程清楚可見、必須明確按等號結算最終結果後方可入帳。
 
 ## What Changes
 
-- **自製小算盤金額輸入（Calculator Keypad）**：在 [QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue) 導入 4×4 數字鍵盤（包含 `0~9`、`.`、`+`、`-`、`C`、`⌫`、`=`），支援算式即時解析與運算。
-- **金額顯示盒（Amount Display Box）**：顯示算式預覽（Expression）與大字體金額（JetBrains Mono），點擊不觸發系統軟鍵盤。
-- **底部固定操作列（Fixed / Sticky Footer）**：將儲存按鈕獨立固定於抽屜底部（不受上方表單與鍵盤滾動影響），並自動適配手機底部安全區 `safe-area-inset-bottom`。
-- **空間與排版優化**：標籤採用單行水平滑動（Horizontal Scroll Chips），保持畫面俐落簡潔。
+- **iOS 計算機暫存器狀態機（Register State Machine）**：
+  - 徹底告別單純的字串解析，改採 iOS 計算機經典狀態機（維護 `displayValue`、`previousValue`、`activeOperator`、`waitingForOperand`）。
+  - 完整支援四則運算（`+`、`-`、`×`、`÷`）與百分比（`%`）。
+- **運算符按鍵選中高亮（Active Operator Highlight）**：
+  - 當點選 `+`、`-`、`×`、`÷` 時，按鍵進入反白/反色高亮選中狀態；按下新數字時高亮熄滅，若切換運算符則平滑更換高亮。
+- **AC / C 動態切換與退格**：
+  - 輸入數字時顯示 `C`（只清除當前輸入）；按過後或重置狀態顯示 `AC`（全清暫存器）。
+  - 提供獨立退格鍵 `⌫`，並支援大數字區域向左滑動刪除末位數字手勢。
+- **iOS 18 歷史算式條（Math History Line）與等號結算**：
+  - 上方以精緻淡色保留完整算式軌跡（例如 `85 + 35`）。
+  - 必須按下 `=` 才能結算最終結果；按 `=` 後上方算式保留顯示為 `85 + 35 =`，主螢幕跳出最終金額。
+  - 防呆保護：若處於運算等待狀態未按 `=` 直接點擊儲存，進行阻擋並提示「請先按 = 完成結算」。
+- **標準 iOS 5 列鍵盤佈局（樣式維持黑白極簡）**：
+  - Row 1: `AC/C`、`⌫`、`%`、`÷`
+  - Row 2: `7`、`8`、`9`、`×`
+  - Row 3: `4`、`5`、`6`、`-`
+  - Row 4: `1`、`2`、`3`、`+`
+  - Row 5: `0` (跨雙格)、`.`、`=`
+- **抽屜三段式佈局與固定底部送出列**：
+  - 保持 Header、Scrollable Body、Fixed Footer 三段式架構，適配 `safe-area-inset-bottom`。
 
 ## Capabilities
 
 ### New Capabilities
-- `calculator-keypad-entry`: 在記帳抽屜中提供自製數字小算盤輸入、算式即時計算，以及底部固定操作按鈕。
+- `calculator-keypad-entry`: 依據 iOS 計算機標準狀態機提供 5 列小算盤輸入、運算符高亮反饋、AC/C 動態切換、歷史算式條與等號結算驗證。
 
 ### Modified Capabilities
+<!-- 無既有 specs 修改 -->
 
 ## Impact
 
-- **前端元件**：[src/components/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue)
-- **依賴與 API**：無新增外部依賴，純前端 Vue 3 + CSS 變數與 Touch 手勢相容。
+- **前端元件**：[src/components/QuickEntrySheet.vue](file:///e:/works/記帳/src/components/QuickEntrySheet.vue)
+- **依賴與 API**：純前端 Vue 3 + CSS 變數，維持現有黑白極簡主題，無新增外部依賴。

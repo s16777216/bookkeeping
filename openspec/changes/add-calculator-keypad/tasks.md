@@ -1,14 +1,16 @@
-## 1. 數字算盤與即時計算引擎
+## 1. iOS 暫存器狀態機核心與四則運算
 
-- [ ] 1.1 在 [src/components/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue) 實作算式狀態（`expression`）、即時解析邏輯與按鍵處理（`0~9`, `.`, `+`, `-`, `C`, `⌫`, `=`）
-- [ ] 1.2 在 [src/components/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue) 建立 4×4 Bento 風格數字鍵盤與算式/大字體金額顯示盒
+- [ ] 1.1 在 [src/components/QuickEntrySheet.vue](file:///e:/works/記帳/src/components/QuickEntrySheet.vue) 實作標準暫存器狀態機（`displayValue`, `previousValue`, `activeOperator`, `waitingForOperand`, `isEvaluated`）與四則運算（`+`, `-`, `×`, `÷`, `%`）
+- [ ] 1.2 實作連續鏈式運算（Chaining）與重複按等號邏輯
+- [ ] 1.3 實作 `AC` 與 `C` 動態切換邏輯與數字區向左滑動退格手勢
 
-## 2. 抽屜佈局重構與底部固定操作列
+## 2. 標準 iOS 5 列佈局與黑白極簡樣式
 
-- [ ] 2.1 重構 [src/components/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue) 的容器為 Header、Scrollable Body（`overflow-y: auto`）、Fixed Footer（`flex-shrink: 0`）三段式佈局
-- [ ] 2.2 將「儲存交易 / 開立收據」按鈕移至 Fixed Footer，並加入 `env(safe-area-inset-bottom)` 安全區適配
+- [ ] 2.1 在 [src/components/QuickEntrySheet.vue](file:///e:/works/記帳/src/components/QuickEntrySheet.vue) 重構鍵盤網格為標準 iOS 5 列排版（包含 `0` 鍵跨兩欄寬度、`AC/C`、`⌫`、`%`、`÷`、`×`、`-`、`+`、`=`）
+- [ ] 2.2 實作運算符按鍵選中時的反色高亮（Active Operator Highlight）與切換視覺
+- [ ] 2.3 控制 5 列按鍵高度（38~40px），確保在 Scrollable Body 中緊湊舒適
 
-## 3. 標籤橫向滑動與整體驗證
+## 3. 歷史算式條保留可見與送出防呆驗證
 
-- [ ] 3.1 將標籤清單改為單行水平滑動（Horizontal Scroll Chips），並優化備註輸入框與已執行切換開關佈局
-- [ ] 3.2 執行 `npm run build` 進行型別與 PWA 建置驗證，並測試算盤輸入、連續加減運算與滾動固定按鈕行為
+- [ ] 3.1 升級金額顯示盒，頂部展示精緻淡色歷史算式條（輸入時顯示算式進度，按 `=` 後保留顯示 `${prev} ${op} ${curr} =`）
+- [ ] 3.2 實作未結算防呆校驗（有運算符且未按 `=` 時禁止送出）與建置測試（`npm run build`）
