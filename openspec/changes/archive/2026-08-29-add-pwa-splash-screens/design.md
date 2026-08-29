@@ -9,12 +9,13 @@
 **Goals:**
 - 整合 `@vite-pwa/assets-generator` 開發工具，建立可重複執行的開屏資源生成腳本。
 - **精簡手機優先策略**：聚焦 iPhone 12~16 主流機型，特別涵蓋 iPhone 13 mini (1080×2340 px, 3x DPR)。
-- **深淺雙模式**：淺色採用 `#FBFBFA` 紙本底色，深色採用 `#1C1C1E`，純圖示居中，維持極簡紙本風格。
-- 產出之圖檔（約 14 張）納入 `public/` 與 Git 追蹤，並在 `index.html` 注入精確的 Media Query 標籤。
+- **極簡紙本單一配色**：背景採用專案經典的 `#FBFBFA` 紙本米白色，純收據圖示居中，維持極簡紙本風格高度統一。
+- 產出之開屏圖檔納入 `public/` 與 Git 追蹤，並在 `index.html` 注入精確的 Media Query 標籤。
 - 適配專案的 GitHub Pages 子路徑 `base: '/bookkeeping/'`。
 
 **Non-Goals:**
 - 不生成 iPad 全系列開屏圖（大幅節省儲存庫體積）。
+- 不生成橫向（Landscape）開屏圖，專注於手機單手直立記帳使用情境。
 - 不動態生成含文字之開屏圖，維持純圖示極簡視覺。
 
 ## Decisions
