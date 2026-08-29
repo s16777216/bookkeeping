@@ -119,8 +119,9 @@ async function archive() {
 </script>
 
 <template>
-  <Transition name="sheet">
-    <div v-if="isOpen" class="sheet-backdrop" @click.self="close">
+  <Teleport to="body">
+    <Transition name="sheet">
+      <div v-if="isOpen" class="sheet-backdrop" @click.self="close">
       <div
         class="sheet-container"
         :style="{
@@ -193,6 +194,7 @@ async function archive() {
       </div>
     </div>
   </Transition>
+</Teleport>
 </template>
 
 <style scoped>
