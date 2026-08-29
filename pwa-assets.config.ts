@@ -15,7 +15,7 @@ export default defineConfig({
       {
         padding: 0.3,
         resizeOptions: {
-          background: '#FBFBFA',
+          background: '#F3F0DF',
           fit: 'contain'
         },
         linkMediaOptions: {

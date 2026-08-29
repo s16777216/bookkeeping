@@ -14,7 +14,7 @@ export default defineConfig({
         short_name: 'Bookeeping',
         description: '以圖論為核心的 Local-first 極簡收據風格記帳應用',
         theme_color: '#FBFBFA',
-        background_color: '#FBFBFA',
+        background_color: '#F3F0DF',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/bookkeeping/',
