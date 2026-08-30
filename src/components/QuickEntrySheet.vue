@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import type { FinanceNode, FinanceTag } from "../types/finance";
+import BaseSheet from "./BaseSheet.vue";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -33,9 +34,6 @@ const fromId = ref(""),
   tagInput = ref(""),
   managingTags = ref(false),
   error = ref("");
-const dragOffset = ref(0),
-  isDragging = ref(false);
-let touchStartY = 0;
 const activeNodes = computed(() => props.nodes);
 
 // --- iOS 計算機暫存器狀態機 ---
@@ -341,64 +339,28 @@ function handleNumberTouchEnd(event: TouchEvent) {
 function close() {
   emit("close");
 }
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === "Escape" && props.isOpen) close();
-}
-function startDrag(event: TouchEvent) {
-  if (event.touches.length !== 1) return;
-  touchStartY = event.touches[0].clientY;
-  isDragging.value = true;
-}
-function moveDrag(event: TouchEvent) {
-  if (!isDragging.value) return;
-  dragOffset.value = Math.max(0, event.touches[0].clientY - touchStartY);
-}
-function endDrag() {
-  if (!isDragging.value) return;
-  isDragging.value = false;
-  if (dragOffset.value >= 120) {
-    close();
-    return;
-  }
-  dragOffset.value = 0;
-}
 
 watch(
   () => props.isOpen,
   (open) => {
-    if (!open) {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeydown);
-      return;
+    if (open) {
+      fromId.value =
+        props.initialFromNode?.id ||
+        props.nodes.find((node) => node.owner === "me")?.id ||
+        "";
+      toId.value =
+        props.nodes.find((node) => node.owner === "external")?.id ||
+        props.nodes.find((node) => node.id !== fromId.value)?.id ||
+        "";
+      resetAll();
+      memo.value = "";
+      executed.value = true;
+      selectedTags.value = [];
+      tagInput.value = "";
+      error.value = "";
     }
-    dragOffset.value = 0;
-    isDragging.value = false;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeydown);
-    fromId.value =
-      props.initialFromNode?.id ||
-      props.nodes.find((node) => node.owner === "me")?.id ||
-      "";
-    toId.value =
-      props.nodes.find((node) => node.owner === "external")?.id ||
-      props.nodes.find((node) => node.id !== fromId.value)?.id ||
-      "";
-    resetAll();
-    memo.value = "";
-    executed.value = true;
-    selectedTags.value = [];
-    tagInput.value = "";
-    error.value = "";
   },
 );
-function handleAfterLeave() {
-  dragOffset.value = 0;
-  isDragging.value = false;
-}
-onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeydown);
-  document.body.style.overflow = "";
-});
 
 async function addTag() {
   if (!tagInput.value.trim()) return;
@@ -443,37 +405,10 @@ function submit() {
 </script>
 
 <template>
-  <Transition name="entry-sheet" @after-leave="handleAfterLeave">
-    <div v-if="isOpen" class="overlay" @click.self="close">
-      <form
-        class="sheet"
-        :class="{ dragging: isDragging }"
-        :style="{
-          '--drag-offset': `${dragOffset}px`,
-        }"
-        @submit.prevent="submit"
-      >
-        <!-- 頂部區：手勢條與標題 -->
-        <div class="sheet-top-tier">
-          <div
-            class="drag-area"
-            @touchstart="startDrag"
-            @touchmove="moveDrag"
-            @touchend="endDrag"
-            @touchcancel="endDrag"
-          >
-            <span class="drag-handle"></span>
-          </div>
-          <header class="sheet-header">
-            <strong>🧾 記一筆資金流向</strong>
-            <button type="button" class="plain" @click="close">✕</button>
-          </header>
-          <p v-if="error" class="error">{{ error }}</p>
-        </div>
-
-        <!-- 滾動內容區 -->
-        <div class="sheet-body">
-          <div class="node-selectors">
+  <BaseSheet :is-open="isOpen" title="🧾 記一筆資金流向" size="lg" @close="close">
+    <div class="quick-entry-form">
+      <p v-if="error" class="error">{{ error }}</p>
+      <div class="node-selectors">
             <label>
               從
               <select v-model="fromId">
@@ -752,99 +687,40 @@ function submit() {
           </div>
         </div>
 
-        <!-- 底部固定操作列 -->
-        <footer class="sheet-footer">
-          <button class="submit" type="submit">儲存</button>
-        </footer>
-      </form>
-    </div>
-  </Transition>
+    <template #footer>
+      <button class="submit" type="button" @click="submit">儲存</button>
+    </template>
+  </BaseSheet>
 </template>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: #0006;
-  z-index: 600;
-  display: flex;
-  align-items: end;
-  overflow: hidden;
-}
-.sheet {
-  width: 100%;
-  height: min(90dvh, 760px);
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px));
-  background: var(--bg-surface);
-  border-radius: 18px 18px 0 0;
+.quick-entry-form {
   display: flex;
   flex-direction: column;
-  padding: 0;
-  transform: translateY(var(--drag-offset, 0px));
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  gap: 12px;
 }
-.sheet.dragging {
-  transition: none;
-}
-.sheet-top-tier {
-  flex-shrink: 0;
-  padding: 8px 18px 6px;
-  background: var(--bg-surface);
-}
-.drag-area {
-  height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  touch-action: none;
-  cursor: grab;
-}
-.drag-handle {
-  width: 38px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--border-dashed);
-}
-.sheet-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 28px;
-}
-.sheet-header strong {
-  font-size: 15px;
-}
+
 .error {
   color: var(--accent-expense);
   margin: 4px 0 0;
   font-size: 12px;
 }
-.sheet-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  padding: 4px 18px 16px;
-  display: grid;
-  gap: 12px;
-  align-content: start;
-}
+
 .node-selectors {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-.sheet label {
+
+.quick-entry-form label {
   display: grid;
   gap: 4px;
   font-size: 12px;
   color: var(--text-secondary);
 }
-.sheet input,
-.sheet select {
+
+.quick-entry-form input,
+.quick-entry-form select {
   padding: 9px;
   border: 1px solid var(--border-light);
   border-radius: 8px;
@@ -1121,23 +997,5 @@ button {
 }
 .toggle {
   display: block !important;
-}
-
-/* 動畫過渡 */
-.entry-sheet-enter-active .sheet,
-.entry-sheet-leave-active .sheet {
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.entry-sheet-enter-from .sheet,
-.entry-sheet-leave-to .sheet {
-  transform: translateY(100%);
-}
-.entry-sheet-enter-active,
-.entry-sheet-leave-active {
-  transition: opacity 0.24s ease;
-}
-.entry-sheet-enter-from,
-.entry-sheet-leave-to {
-  opacity: 0;
 }
 </style>
