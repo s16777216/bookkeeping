@@ -1,12 +1,13 @@
 ## 1. 依賴安裝與共用元件封裝
 
 - [ ] 1.1 安裝 `lucide-vue-next` npm 依賴套件
-- [ ] 1.2 建立 `src/components/NodeIcon.vue` 動態圖示元件，定義常用財務圖示映射字典與 Emoji 向下相容邏輯
-- [ ] 1.3 更新 `src/db/seeds.ts` 預設示範節點的 `icon` 欄位為 Lucide 圖示名稱
+- [ ] 1.2 建立 `src/components/NodeIcon.vue` 動態圖示元件，定義 25 個常用財務生活圖示字典與 `<Tag />` 靜默 Fallback 邏輯
+- [ ] 1.3 建立 `src/components/IconPickerSheet.vue` 抽屜元件（基於 `BaseSheet` size="sm"，內置 5×5 圖示網格，支援 Select & Auto-Close）
+- [ ] 1.4 更新 `src/db/seeds.ts` 預設示範節點的 `icon` 欄位為 Lucide 圖示名稱
 
 ## 2. 系統 UI 圖示與節點管理升級
 
-- [ ] 2.1 替換 `BottomNavBar.vue`、`HeaderBar.vue` 與 `ReceiptCard.vue` 內的 Emoji 為 Lucide 圖示
-- [ ] 2.2 替換 `QuickEntrySheet.vue`、`QuickNodeBar.vue` 與 `GraphView.vue` 內的 Emoji 與節點圖示渲染為 `NodeIcon`
-- [ ] 2.3 在 `NodesView.vue` 中加入圖示挑選盤（Icon Grid Picker），並替換操作按鈕圖示
-- [ ] 2.4 執行畫面與功能測試，確認全站視覺風格一致、舊資料相容且無 TypeScript / 建置錯誤
+- [ ] 2.1 替換 `BottomNavBar.vue`、`HeaderBar.vue` 與 `ReceiptCard.vue` 內的 Emoji 為 Lucide 向量圖示
+- [ ] 2.2 替換 `QuickEntrySheet.vue`、`QuickNodeBar.vue` 與 `GraphView.vue`（含裝飾標題）內的 Emoji 與節點圖示渲染為 `NodeIcon`
+- [ ] 2.3 在 `NodesView.vue`（新增）與 `EditNodeSheet.vue`（編輯）中導入純圖示 Avatar 觸發按鈕與 `IconPickerSheet`
+- [ ] 2.4 執行畫面與功能測試，確認全站視覺風格一致、無舊 Emoji 殘留且建置（`npm run build`）與型別檢查無錯誤
