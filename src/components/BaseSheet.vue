@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from "vue";
+import { X } from "lucide-vue-next";
 
 const props = withDefaults(
   defineProps<{
@@ -95,7 +96,9 @@ onUnmounted(() => {
             <slot name="title">
               <div class="sheet-header-row">
                 <h3>{{ title }}</h3>
-                <button class="close-btn" type="button" @click="close" aria-label="關閉抽屜">✕</button>
+                <button class="close-btn" type="button" @click="close" aria-label="關閉抽屜">
+                  <X :size="18" />
+                </button>
               </div>
             </slot>
           </div>

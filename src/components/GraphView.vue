@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { Network } from "lucide-vue-next";
+import NodeIcon from "./NodeIcon.vue";
 import type {
   CounterpartyBalance,
   FinanceNode,
   SummaryMetrics,
 } from "../types/finance";
+
 defineProps<{
   nodes: FinanceNode[];
   metrics: SummaryMetrics;
@@ -17,7 +20,10 @@ const money = (amount: number) =>
 <template>
   <div class="graph-view-container animate-fade-in">
     <div class="view-header">
-      <div class="view-title">📊 圖論流向與結餘分析</div>
+      <div class="view-title">
+        <Network :size="18" />
+        <span>圖論流向與結餘分析</span>
+      </div>
       <div class="view-subtitle">已執行交易與待結算承諾分開計算</div>
     </div>
     <section>
@@ -27,23 +33,32 @@ const money = (amount: number) =>
         :key="node.id"
         class="row"
       >
-        <span>{{ node.icon }} {{ node.name }}</span
-        ><b>NT$ {{ money(getNodeBalance(node.id)) }}</b>
+        <span class="node-label-group">
+          <NodeIcon :name="node.icon" :size="16" />
+          <span>{{ node.name }}</span>
+        </span>
+        <b>NT$ {{ money(getNodeBalance(node.id)) }}</b>
       </div>
     </section>
     <section>
       <h3>待收款</h3>
       <div v-for="item in receivables" :key="item.node.id" class="row">
-        <span>{{ item.node.icon }} {{ item.node.name }}</span
-        ><b class="income">NT$ {{ money(item.amount) }}</b>
+        <span class="node-label-group">
+          <NodeIcon :name="item.node.icon" :size="16" />
+          <span>{{ item.node.name }}</span>
+        </span>
+        <b class="income">NT$ {{ money(item.amount) }}</b>
       </div>
       <p v-if="!receivables.length">無待收款</p>
     </section>
     <section>
       <h3>待付款</h3>
       <div v-for="item in payables" :key="item.node.id" class="row">
-        <span>{{ item.node.icon }} {{ item.node.name }}</span
-        ><b class="expense">NT$ {{ money(item.amount) }}</b>
+        <span class="node-label-group">
+          <NodeIcon :name="item.node.icon" :size="16" />
+          <span>{{ item.node.name }}</span>
+        </span>
+        <b class="expense">NT$ {{ money(item.amount) }}</b>
       </div>
       <p v-if="!payables.length">無待付款</p>
     </section>
@@ -54,8 +69,16 @@ const money = (amount: number) =>
   padding: 16px 20px 30px;
 }
 .view-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 16px;
   font-weight: 700;
+}
+.node-label-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .view-subtitle,
 p {

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { ArrowRight, Trash2, Clock, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-vue-next";
+import NodeIcon from "./NodeIcon.vue";
 import type { FinanceEdge, FinanceNode, FinanceTag } from "../types/finance";
+
 const props = defineProps<{
   edge: FinanceEdge;
   nodeMap: Map<string, FinanceNode>;
@@ -42,16 +45,28 @@ const date = computed(() =>
 <template>
   <article class="card" :class="{ pending }">
     <header>
-      <span
-        >{{ pending ? "⏳" : kind === "收入" ? "💰" : "🧾" }} {{ kind }}</span
-      ><small>{{ pending ? "建立於" : "執行於" }} {{ date }}</small>
+      <span class="card-status-badge">
+        <Clock v-if="pending" :size="13" />
+        <ArrowDownLeft v-else-if="kind === '收入'" :size="13" />
+        <ArrowUpRight v-else-if="kind === '支出'" :size="13" />
+        <ArrowLeftRight v-else :size="13" />
+        {{ kind }}
+      </span>
+      <small>{{ pending ? "建立於" : "執行於" }} {{ date }}</small>
     </header>
     <strong>{{
       edge.memo || `${from?.name || "未知"} → ${to?.name || "未知"}`
     }}</strong>
     <div class="flow">
-      <span>{{ from?.icon }} {{ from?.name || "未知" }}</span
-      ><b>→</b><span>{{ to?.icon }} {{ to?.name || "未知" }}</span>
+      <span class="flow-node">
+        <NodeIcon :name="from?.icon" :size="16" />
+        <span>{{ from?.name || "未知" }}</span>
+      </span>
+      <ArrowRight :size="14" class="flow-arrow" />
+      <span class="flow-node">
+        <NodeIcon :name="to?.icon" :size="16" />
+        <span>{{ to?.name || "未知" }}</span>
+      </span>
     </div>
     <div v-if="tagNames.length" class="tags">
       <span v-for="tag in tagNames" :key="tag">#{{ tag }}</span>
@@ -60,13 +75,13 @@ const date = computed(() =>
       <b :class="kind === '收入' ? 'income' : kind === '支出' ? 'expense' : ''"
         >NT$ {{ new Intl.NumberFormat("zh-TW").format(edge.amount) }}</b
       >
-      <div>
+      <div class="card-actions">
         <button v-if="pending" @click="emit('complete', edge.id)">
           標記完成</button
         ><button v-else class="plain" @click="emit('undo', edge.id)">
           撤回完成</button
-        ><button class="plain danger" @click="emit('delete', edge.id)">
-          ✕
+        ><button class="plain danger btn-icon" title="刪除收據" @click="emit('delete', edge.id)">
+          <Trash2 :size="14" />
         </button>
       </div>
     </footer>
@@ -139,5 +154,31 @@ button {
 .plain {
   background: transparent;
   color: var(--text-secondary);
+}
+.card-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.flow-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.flow-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
 }
 </style>

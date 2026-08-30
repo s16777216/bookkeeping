@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Receipt, Network, Plus, WalletCards } from "lucide-vue-next";
+
 const props = defineProps<{
   currentTab: "ledger" | "graph" | "nodes";
 }>();
@@ -16,7 +18,7 @@ const emit = defineEmits<{
       :class="{ active: props.currentTab === 'ledger' }"
       @click="emit('changeTab', 'ledger')"
     >
-      <span class="nav-icon">🧾</span>
+      <span class="nav-icon"><Receipt :size="20" :stroke-width="props.currentTab === 'ledger' ? 2.25 : 1.75" /></span>
       <span class="nav-label">收據帳本</span>
     </button>
 
@@ -25,7 +27,7 @@ const emit = defineEmits<{
       :class="{ active: props.currentTab === 'graph' }"
       @click="emit('changeTab', 'graph')"
     >
-      <span class="nav-icon">📊</span>
+      <span class="nav-icon"><Network :size="20" :stroke-width="props.currentTab === 'graph' ? 2.25 : 1.75" /></span>
       <span class="nav-label">圖論分析</span>
     </button>
 
@@ -36,7 +38,7 @@ const emit = defineEmits<{
         title="記一筆新收據"
         @click="emit('openEntry')"
       >
-        <span class="fab-plus">＋</span>
+        <Plus :size="24" :stroke-width="2.5" />
       </button>
     </div>
 
@@ -45,7 +47,7 @@ const emit = defineEmits<{
       :class="{ active: props.currentTab === 'nodes' }"
       @click="emit('changeTab', 'nodes')"
     >
-      <span class="nav-icon">💼</span>
+      <span class="nav-icon"><WalletCards :size="20" :stroke-width="props.currentTab === 'nodes' ? 2.25 : 1.75" /></span>
       <span class="nav-label">帳戶管理</span>
     </button>
   </nav>
@@ -91,7 +93,10 @@ const emit = defineEmits<{
 }
 
 .nav-icon {
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
 }
 
 .nav-label {
@@ -125,11 +130,5 @@ const emit = defineEmits<{
 
 .nav-fab-btn:active {
   transform: scale(0.94);
-}
-
-.fab-plus {
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1;
 }
 </style>

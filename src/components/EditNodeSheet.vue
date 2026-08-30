@@ -2,6 +2,8 @@
 import { ref, watch } from "vue";
 import type { FinanceNode, NodeOwner } from "../types/finance";
 import BaseSheet from "./BaseSheet.vue";
+import NodeIcon from "./NodeIcon.vue";
+import IconPickerSheet from "./IconPickerSheet.vue";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -18,14 +20,10 @@ const emit = defineEmits<{
 }>();
 
 const name = ref("");
-const icon = ref("🏦");
+const icon = ref("landmark");
 const owner = ref<NodeOwner>("me");
+const isPickerOpen = ref(false);
 const error = ref("");
-
-const EMOJI_PRESETS = [
-  "🏦", "💳", "💵", "🪙", "📱", "💼",
-  "🍔", "☕", "🛒", "🏠", "🚗", "🎮", "🏥", "📚", "💡", "✈️"
-];
 
 function close() {
   emit("close");
@@ -36,11 +34,12 @@ watch(
   (open) => {
     if (open && props.node) {
       name.value = props.node.name;
-      icon.value = props.node.icon || "🏦";
+      icon.value = props.node.icon || "landmark";
       owner.value = props.node.owner;
     }
     error.value = "";
-  }
+    isPickerOpen.value = false;
+  },
 );
 
 async function save() {
@@ -81,31 +80,23 @@ async function archive() {
       <p v-if="error" class="error-msg">{{ error }}</p>
 
       <div class="field-group">
-        <label>節點名稱</label>
-        <input
-          v-model="name"
-          placeholder="例如：台新銀行、全聯、薪資"
-          maxlength="30"
-          @keyup.enter="save"
-        />
-      </div>
-
-      <div class="field-group">
-        <label>代表圖標 (Emoji)</label>
-        <div class="icon-input-row">
-          <input v-model="icon" class="icon-display-input" maxlength="4" />
-          <div class="emoji-grid">
-            <button
-              v-for="e in EMOJI_PRESETS"
-              type="button"
-              :key="e"
-              class="emoji-chip"
-              :class="{ active: icon === e }"
-              @click="icon = e"
-            >
-              {{ e }}
-            </button>
-          </div>
+        <label>節點圖示與名稱</label>
+        <div class="name-icon-row">
+          <button
+            type="button"
+            class="icon-avatar-trigger"
+            title="點擊更換圖示"
+            @click="isPickerOpen = true"
+          >
+            <NodeIcon :name="icon" :size="22" />
+          </button>
+          <input
+            v-model="name"
+            class="name-input"
+            placeholder="例如：台新銀行、全聯、薪資"
+            maxlength="30"
+            @keyup.enter="save"
+          />
         </div>
       </div>
 
@@ -125,6 +116,14 @@ async function archive() {
         <button class="btn danger-outline" @click="archive">封存節點</button>
       </div>
     </template>
+
+    <!-- 圖示挑選抽屜 -->
+    <IconPickerSheet
+      :is-open="isPickerOpen"
+      :model-value="icon"
+      @update:model-value="icon = $event"
+      @close="isPickerOpen = false"
+    />
   </BaseSheet>
 </template>
 
@@ -172,43 +171,40 @@ async function archive() {
   border-color: var(--text-primary, #111);
 }
 
-.icon-input-row {
+.name-icon-row {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.icon-display-input {
-  width: 56px;
-  text-align: center;
-  font-size: 20px;
-}
-
-.emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 6px;
-  flex: 1;
-}
-
-.emoji-chip {
-  background: var(--bg-main, #f5f5f5);
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-size: 18px;
-  padding: 6px 0;
+.name-icon-row .icon-avatar-trigger {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface-soft, #f8f9fa);
+  border: 1px solid var(--border-light, #e9ecef);
+  border-radius: 10px;
+  color: var(--text-primary);
   cursor: pointer;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
-.emoji-chip:hover {
-  background: var(--border-light, #eee);
+.name-icon-row .icon-avatar-trigger:hover {
+  background-color: var(--border-light);
+  transform: translateY(-1px);
 }
 
-.emoji-chip.active {
-  border-color: var(--text-primary, #111);
-  background: var(--bg-surface, #fff);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+.name-icon-row .icon-avatar-trigger:active {
+  transform: scale(0.95);
+}
+
+.name-icon-row .name-input {
+  flex: 1;
+  height: 44px;
+  box-sizing: border-box;
 }
 
 .hint {

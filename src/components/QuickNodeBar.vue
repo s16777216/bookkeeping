@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import NodeIcon from "./NodeIcon.vue";
 import type { FinanceNode } from "../types/finance";
+
 const props = defineProps<{
   nodes: FinanceNode[];
   getNodeBalance: (id: string) => number;
@@ -22,8 +24,8 @@ const money = (node: FinanceNode) =>
         class="node-chip"
         @click="emit('selectNode', node)"
       >
-        <span>{{ node.icon || "🏦" }}</span
-        ><span
+        <NodeIcon :name="node.icon" :size="18" />
+        <span
           ><b>{{ node.name }}</b
           ><small>{{ money(node) }}</small></span
         >

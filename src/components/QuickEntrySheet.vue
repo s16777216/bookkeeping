@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { Receipt, Delete, X } from "lucide-vue-next";
 import type { FinanceNode, FinanceTag } from "../types/finance";
 import BaseSheet from "./BaseSheet.vue";
 
@@ -405,7 +406,18 @@ function submit() {
 </script>
 
 <template>
-  <BaseSheet :is-open="isOpen" title="🧾 記一筆資金流向" size="lg" @close="close">
+  <BaseSheet :is-open="isOpen" size="lg" @close="close">
+    <template #title>
+      <div class="sheet-header-row">
+        <h3 class="entry-title-with-icon">
+          <Receipt :size="18" />
+          <span>記一筆資金流向</span>
+        </h3>
+        <button class="close-btn" type="button" @click="close" aria-label="關閉抽屜">
+          <X :size="18" />
+        </button>
+      </div>
+    </template>
     <div class="quick-entry-form">
       <p v-if="error" class="error">{{ error }}</p>
       <div class="node-selectors">
@@ -417,7 +429,7 @@ function submit() {
                   :key="node.id"
                   :value="node.id"
                 >
-                  {{ node.icon }} {{ node.name }}
+                  {{ node.name }}
                 </option>
               </select>
             </label>
@@ -429,7 +441,7 @@ function submit() {
                   :key="node.id"
                   :value="node.id"
                 >
-                  {{ node.icon }} {{ node.name }}
+                  {{ node.name }}
                 </option>
               </select>
             </label>
@@ -469,11 +481,11 @@ function submit() {
             </button>
             <button
               type="button"
-              class="keypad-btn key-func"
+              class="keypad-btn key-func btn-backspace"
               title="退格（亦可於上方數字左滑）"
               @click="handleKeypadPress('⌫')"
             >
-              ⌫
+              <Delete :size="20" />
             </button>
             <button
               type="button"
@@ -727,6 +739,28 @@ function submit() {
   background: var(--bg-container);
   color: var(--text-primary);
   font-size: 14px;
+}
+
+.plain-btn {
+  background: none;
+  border: 1px dashed var(--border-light);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.entry-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+.btn-backspace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 金額顯示盒 */

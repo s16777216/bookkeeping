@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { WalletCards, Plus, X, Pencil } from "lucide-vue-next";
 import type { FinanceNode, NodeOwner } from "../types/finance";
 import EditNodeSheet from "./EditNodeSheet.vue";
+import NodeIcon from "./NodeIcon.vue";
+import IconPickerSheet from "./IconPickerSheet.vue";
 
 const props = defineProps<{
   nodes: FinanceNode[];
@@ -19,8 +22,9 @@ const props = defineProps<{
 
 const isAdding = ref(false);
 const name = ref("");
-const icon = ref("🏦");
+const icon = ref("landmark");
 const owner = ref<NodeOwner>("me");
+const isPickerOpen = ref(false);
 
 const selectedNode = ref<FinanceNode | null>(null);
 const isEditSheetOpen = ref(false);
@@ -38,6 +42,7 @@ async function add() {
     icon: icon.value,
   });
   name.value = "";
+  icon.value = "landmark";
   isAdding.value = false;
 }
 
@@ -51,11 +56,15 @@ function openEditSheet(node: FinanceNode) {
   <div class="nodes-view-container animate-fade-in">
     <div class="view-header">
       <div>
-        <div class="view-title">💼 帳戶與對象管理</div>
+        <div class="view-title">
+          <WalletCards :size="18" />
+          <span>帳戶與對象管理</span>
+        </div>
         <div class="view-subtitle">點擊任一節點卡片即可進行編輯或封存</div>
       </div>
       <button class="add-btn" @click="isAdding = !isAdding">
-        {{ isAdding ? "取消" : "＋ 新增" }}
+        <component :is="isAdding ? X : Plus" :size="14" />
+        <span>{{ isAdding ? "取消" : "新增" }}</span>
       </button>
     </div>
 
@@ -70,7 +79,14 @@ function openEditSheet(node: FinanceNode) {
           <option value="me">我的帳戶</option>
           <option value="external">外部對象</option>
         </select>
-        <input v-model="icon" maxlength="4" aria-label="圖示" class="icon-input" />
+        <button
+          type="button"
+          class="icon-avatar-trigger"
+          title="選擇節點圖示"
+          @click="isPickerOpen = true"
+        >
+          <NodeIcon :name="icon" :size="20" />
+        </button>
       </div>
       <button class="submit-btn">建立節點</button>
     </form>
@@ -91,12 +107,16 @@ function openEditSheet(node: FinanceNode) {
           class="node-card"
           @click="openEditSheet(node)"
         >
-          <span class="node-icon">{{ node.icon || "🏷️" }}</span>
+          <span class="node-icon">
+            <NodeIcon :name="node.icon" :size="20" />
+          </span>
           <div class="grow">
             <strong>{{ node.name }}</strong>
             <small>{{ node.owner === "me" ? "我的帳戶" : "外部對象" }}</small>
           </div>
-          <span class="edit-hint">✎</span>
+          <span class="edit-hint">
+            <Pencil :size="13" />
+          </span>
         </article>
       </div>
       <p v-else class="empty">尚無{{ group.title }}</p>
@@ -109,6 +129,14 @@ function openEditSheet(node: FinanceNode) {
       :on-update="props.onUpdateNode"
       :on-archive="props.onArchiveNode"
       @close="isEditSheetOpen = false"
+    />
+
+    <!-- 新增節點時的圖示挑選抽屜 -->
+    <IconPickerSheet
+      :is-open="isPickerOpen"
+      :model-value="icon"
+      @update:model-value="icon = $event"
+      @close="isPickerOpen = false"
     />
   </div>
 </template>
@@ -123,6 +151,9 @@ function openEditSheet(node: FinanceNode) {
   justify-content: space-between;
 }
 .view-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 16px;
   font-weight: 700;
 }
@@ -133,6 +164,9 @@ small,
   color: var(--text-secondary);
 }
 .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 0;
   border-radius: 8px;
   padding: 8px 12px;
@@ -164,9 +198,26 @@ small,
   color: var(--text-primary);
   outline: none;
 }
-.icon-input {
-  width: 60px;
-  text-align: center;
+.icon-avatar-trigger {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface-soft, #f8f9fa);
+  border: 1px solid var(--border-light, #e9ecef);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.icon-avatar-trigger:hover {
+  background-color: var(--border-light);
+  transform: translateY(-1px);
+}
+.icon-avatar-trigger:active {
+  transform: scale(0.95);
 }
 .row {
   display: flex;
