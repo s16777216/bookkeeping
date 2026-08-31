@@ -100,12 +100,12 @@ async function handleSubmit() {
 
 async function archive() {
   if (!props.node) return;
-  if (confirm(`確定要封存「${props.node.name}」嗎？歷史交易會被保留。`)) {
+  if (confirm(`確定要刪除「${props.node.name}」嗎？`)) {
     try {
       await props.onArchive(props.node.id);
       close();
     } catch (err: any) {
-      error.value = err?.message || "封存失敗";
+      error.value = err?.message || "刪除失敗";
     }
   }
 }
@@ -155,7 +155,7 @@ async function archive() {
           :disabled="isSubmitting"
           @click="handleSubmit"
         >
-          {{ isSubmitting ? "建立中..." : "建立節點" }}
+          {{ isSubmitting ? "建立中..." : "建立" }}
         </button>
       </div>
       <div v-else class="edit-actions">
@@ -164,9 +164,9 @@ async function archive() {
           :disabled="isSubmitting"
           @click="handleSubmit"
         >
-          {{ isSubmitting ? "儲存中..." : "儲存修改" }}
+          {{ isSubmitting ? "儲存中..." : "儲存" }}
         </button>
-        <button class="btn danger-outline" @click="archive">封存節點</button>
+        <button class="btn danger-outline" @click="archive">刪除</button>
       </div>
     </template>
 

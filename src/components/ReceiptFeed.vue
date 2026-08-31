@@ -17,7 +17,7 @@ const executed = computed(() => props.edges.filter((edge) => edge.executed_at));
 <template>
   <div class="receipt-feed-container">
     <div class="feed-header-row">
-      <b>收據帳本</b><button @click="props.onOpenEntry">＋ 記帳</button>
+      <b>收據</b><button @click="props.onOpenEntry">＋</button>
     </div>
     <section v-if="pending.length">
       <h3>待執行（應收／應付）</h3>

@@ -19,7 +19,7 @@ const emit = defineEmits<{
       @click="emit('changeTab', 'ledger')"
     >
       <span class="nav-icon"><Receipt :size="20" :stroke-width="props.currentTab === 'ledger' ? 2.25 : 1.75" /></span>
-      <span class="nav-label">收據帳本</span>
+      <span class="nav-label">收據</span>
     </button>
 
     <button
@@ -28,7 +28,7 @@ const emit = defineEmits<{
       @click="emit('changeTab', 'graph')"
     >
       <span class="nav-icon"><Network :size="20" :stroke-width="props.currentTab === 'graph' ? 2.25 : 1.75" /></span>
-      <span class="nav-label">圖論分析</span>
+      <span class="nav-label">統計</span>
     </button>
 
     <!-- 中央懸浮主要動作按鈕 -->
@@ -48,7 +48,7 @@ const emit = defineEmits<{
       @click="emit('changeTab', 'nodes')"
     >
       <span class="nav-icon"><WalletCards :size="20" :stroke-width="props.currentTab === 'nodes' ? 2.25 : 1.75" /></span>
-      <span class="nav-label">帳戶管理</span>
+      <span class="nav-label">節點管理</span>
     </button>
   </nav>
 </template>
@@ -111,7 +111,7 @@ const emit = defineEmits<{
 .nav-fab-btn {
   width: 52px;
   height: 52px;
-  border-radius: 50%;
+  border-radius: 10px;
   background-color: var(--text-primary);
   color: #ffffff;
   border: 3px solid var(--bg-surface);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { Receipt, Delete, X } from "lucide-vue-next";
+import { Delete } from "lucide-vue-next";
 import type { FinanceNode, FinanceTag } from "../types/finance";
 import BaseSheet from "./BaseSheet.vue";
 
@@ -406,18 +406,7 @@ function submit() {
 </script>
 
 <template>
-  <BaseSheet :is-open="isOpen" size="lg" @close="close">
-    <template #title>
-      <div class="sheet-header-row">
-        <h3 class="entry-title-with-icon">
-          <Receipt :size="18" />
-          <span>記一筆資金流向</span>
-        </h3>
-        <button class="close-btn" type="button" @click="close" aria-label="關閉抽屜">
-          <X :size="18" />
-        </button>
-      </div>
-    </template>
+  <BaseSheet :is-open="isOpen" title="記一筆收據" size="lg" @close="close">
     <div class="quick-entry-form">
       <p v-if="error" class="error">{{ error }}</p>
       <div class="node-selectors">

@@ -45,9 +45,9 @@ function openEdit(node: FinanceNode) {
       <div>
         <div class="view-title">
           <WalletCards :size="18" />
-          <span>帳戶與對象管理</span>
+          <span>節點管理</span>
         </div>
-        <div class="view-subtitle">點擊任一節點卡片即可進行編輯或封存</div>
+        <div class="view-subtitle">點擊任一節點卡片即可進行編輯或刪除</div>
       </div>
       <button class="add-btn" @click="openCreate">
         <Plus :size="14" />
