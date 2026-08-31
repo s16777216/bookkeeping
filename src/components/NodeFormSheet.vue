@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import type { FinanceNode, NodeOwner } from "../types/finance";
 import BaseSheet from "./BaseSheet.vue";
 import NodeIcon from "./NodeIcon.vue";
@@ -8,6 +8,11 @@ import IconPickerSheet from "./IconPickerSheet.vue";
 const props = defineProps<{
   isOpen: boolean;
   node: FinanceNode | null;
+  onCreate: (payload: {
+    name: string;
+    owner: NodeOwner;
+    icon?: string;
+  }) => Promise<FinanceNode | void>;
   onUpdate: (
     id: string,
     updates: Partial<Omit<FinanceNode, "id" | "updated_at">>,
@@ -24,6 +29,12 @@ const icon = ref("landmark");
 const owner = ref<NodeOwner>("me");
 const isPickerOpen = ref(false);
 const error = ref("");
+const isSubmitting = ref(false);
+
+const isCreateMode = computed(() => !props.node);
+const sheetTitle = computed(() =>
+  isCreateMode.value ? "新增節點" : "編輯節點",
+);
 
 function close() {
   emit("close");
@@ -32,32 +43,52 @@ function close() {
 watch(
   () => props.isOpen,
   (open) => {
-    if (open && props.node) {
-      name.value = props.node.name;
-      icon.value = props.node.icon || "landmark";
-      owner.value = props.node.owner;
+    if (open) {
+      if (props.node) {
+        name.value = props.node.name;
+        icon.value = props.node.icon || "landmark";
+        owner.value = props.node.owner;
+      } else {
+        name.value = "";
+        icon.value = "landmark";
+        owner.value = "me";
+      }
+      error.value = "";
+      isPickerOpen.value = false;
+      isSubmitting.value = false;
     }
-    error.value = "";
-    isPickerOpen.value = false;
   },
 );
 
-async function save() {
-  if (!props.node) return;
+async function handleSubmit() {
   const trimmedName = name.value.trim();
   if (!trimmedName) {
     error.value = "名稱不可為空白";
     return;
   }
+
+  isSubmitting.value = true;
+  error.value = "";
+
   try {
-    await props.onUpdate(props.node.id, {
-      name: trimmedName,
-      icon: icon.value,
-      owner: owner.value,
-    });
+    if (isCreateMode.value) {
+      await props.onCreate({
+        name: trimmedName,
+        owner: owner.value,
+        icon: icon.value,
+      });
+    } else if (props.node) {
+      await props.onUpdate(props.node.id, {
+        name: trimmedName,
+        icon: icon.value,
+        owner: owner.value,
+      });
+    }
     close();
   } catch (err: any) {
-    error.value = err?.message || "更新失敗";
+    error.value = err?.message || (isCreateMode.value ? "新增失敗" : "更新失敗");
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
@@ -75,8 +106,8 @@ async function archive() {
 </script>
 
 <template>
-  <BaseSheet :is-open="isOpen" title="編輯節點" size="md" @close="close">
-    <div class="edit-node-form">
+  <BaseSheet :is-open="isOpen" :title="sheetTitle" size="md" @close="close">
+    <div class="node-form">
       <p v-if="error" class="error-msg">{{ error }}</p>
 
       <div class="field-group">
@@ -95,7 +126,8 @@ async function archive() {
             class="name-input"
             placeholder="例如：台新銀行、全聯、薪資"
             maxlength="30"
-            @keyup.enter="save"
+            autofocus
+            @keyup.enter="handleSubmit"
           />
         </div>
       </div>
@@ -111,8 +143,23 @@ async function archive() {
     </div>
 
     <template #footer>
-      <div class="edit-actions">
-        <button class="btn primary" @click="save">儲存修改</button>
+      <div v-if="isCreateMode" class="form-actions">
+        <button
+          class="btn primary block-btn"
+          :disabled="isSubmitting"
+          @click="handleSubmit"
+        >
+          {{ isSubmitting ? "建立中..." : "建立節點" }}
+        </button>
+      </div>
+      <div v-else class="edit-actions">
+        <button
+          class="btn primary"
+          :disabled="isSubmitting"
+          @click="handleSubmit"
+        >
+          {{ isSubmitting ? "儲存中..." : "儲存修改" }}
+        </button>
         <button class="btn danger-outline" @click="archive">封存節點</button>
       </div>
     </template>
@@ -128,7 +175,7 @@ async function archive() {
 </template>
 
 <style scoped>
-.edit-node-form {
+.node-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -212,9 +259,19 @@ async function archive() {
   color: var(--text-secondary, #888);
 }
 
+.form-actions {
+  display: flex;
+  width: 100%;
+}
+
+.block-btn {
+  width: 100%;
+}
+
 .edit-actions {
   display: flex;
   gap: 10px;
+  width: 100%;
 }
 
 .btn {
@@ -226,10 +283,16 @@ async function archive() {
   cursor: pointer;
   border: none;
   transition: opacity 0.15s ease;
+  text-align: center;
 }
 
 .btn:active {
   opacity: 0.8;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn.primary {

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { WalletCards, Plus, X, Pencil } from "lucide-vue-next";
+import { WalletCards, Plus, Pencil } from "lucide-vue-next";
 import type { FinanceNode, NodeOwner } from "../types/finance";
-import EditNodeSheet from "./EditNodeSheet.vue";
+import NodeFormSheet from "./NodeFormSheet.vue";
 import NodeIcon from "./NodeIcon.vue";
-import IconPickerSheet from "./IconPickerSheet.vue";
 
 const props = defineProps<{
   nodes: FinanceNode[];
@@ -20,35 +19,22 @@ const props = defineProps<{
   onArchiveNode: (id: string) => Promise<void>;
 }>();
 
-const isAdding = ref(false);
-const name = ref("");
-const icon = ref("landmark");
-const owner = ref<NodeOwner>("me");
-const isPickerOpen = ref(false);
-
 const selectedNode = ref<FinanceNode | null>(null);
-const isEditSheetOpen = ref(false);
+const isSheetOpen = ref(false);
 
 const mine = computed(() => props.nodes.filter((node) => node.owner === "me"));
 const external = computed(() =>
   props.nodes.filter((node) => node.owner === "external"),
 );
 
-async function add() {
-  if (!name.value.trim()) return;
-  await props.onCreateNode({
-    name: name.value,
-    owner: owner.value,
-    icon: icon.value,
-  });
-  name.value = "";
-  icon.value = "landmark";
-  isAdding.value = false;
+function openCreate() {
+  selectedNode.value = null;
+  isSheetOpen.value = true;
 }
 
-function openEditSheet(node: FinanceNode) {
+function openEdit(node: FinanceNode) {
   selectedNode.value = node;
-  isEditSheetOpen.value = true;
+  isSheetOpen.value = true;
 }
 </script>
 
@@ -62,34 +48,11 @@ function openEditSheet(node: FinanceNode) {
         </div>
         <div class="view-subtitle">點擊任一節點卡片即可進行編輯或封存</div>
       </div>
-      <button class="add-btn" @click="isAdding = !isAdding">
-        <component :is="isAdding ? X : Plus" :size="14" />
-        <span>{{ isAdding ? "取消" : "新增" }}</span>
+      <button class="add-btn" @click="openCreate">
+        <Plus :size="14" />
+        <span>新增</span>
       </button>
     </div>
-
-    <form v-if="isAdding" class="panel" @submit.prevent="add">
-      <input
-        v-model="name"
-        placeholder="名稱，例如：我的銀行、小明、便利商店"
-        maxlength="30"
-      />
-      <div class="row">
-        <select v-model="owner">
-          <option value="me">我的帳戶</option>
-          <option value="external">外部對象</option>
-        </select>
-        <button
-          type="button"
-          class="icon-avatar-trigger"
-          title="選擇節點圖示"
-          @click="isPickerOpen = true"
-        >
-          <NodeIcon :name="icon" :size="20" />
-        </button>
-      </div>
-      <button class="submit-btn">建立節點</button>
-    </form>
 
     <section
       v-for="group in [
@@ -105,7 +68,7 @@ function openEditSheet(node: FinanceNode) {
           v-for="node in group.items"
           :key="node.id"
           class="node-card"
-          @click="openEditSheet(node)"
+          @click="openEdit(node)"
         >
           <span class="node-icon">
             <NodeIcon :name="node.icon" :size="20" />
@@ -122,21 +85,14 @@ function openEditSheet(node: FinanceNode) {
       <p v-else class="empty">尚無{{ group.title }}</p>
     </section>
 
-    <!-- 節點編輯底部抽屜 -->
-    <EditNodeSheet
-      :is-open="isEditSheetOpen"
+    <!-- 節點通用表單抽屜（支援新增與編輯） -->
+    <NodeFormSheet
+      :is-open="isSheetOpen"
       :node="selectedNode"
+      :on-create="props.onCreateNode"
       :on-update="props.onUpdateNode"
       :on-archive="props.onArchiveNode"
-      @close="isEditSheetOpen = false"
-    />
-
-    <!-- 新增節點時的圖示挑選抽屜 -->
-    <IconPickerSheet
-      :is-open="isPickerOpen"
-      :model-value="icon"
-      @update:model-value="icon = $event"
-      @close="isPickerOpen = false"
+      @close="isSheetOpen = false"
     />
   </div>
 </template>
@@ -175,62 +131,13 @@ small,
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
+  transition: opacity 0.15s ease;
 }
-.panel,
+.add-btn:active {
+  opacity: 0.8;
+}
 .group {
-  margin-top: 16px;
-}
-.panel {
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-}
-.panel input,
-.panel select {
-  padding: 10px 12px;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  font-size: 14px;
-  background: var(--bg-main);
-  color: var(--text-primary);
-  outline: none;
-}
-.icon-avatar-trigger {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-surface-soft, #f8f9fa);
-  border: 1px solid var(--border-light, #e9ecef);
-  border-radius: 8px;
-  color: var(--text-primary);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-.icon-avatar-trigger:hover {
-  background-color: var(--border-light);
-  transform: translateY(-1px);
-}
-.icon-avatar-trigger:active {
-  transform: scale(0.95);
-}
-.row {
-  display: flex;
-  gap: 8px;
-}
-.submit-btn {
-  background: var(--text-primary);
-  color: #fff;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  margin-top: 20px;
 }
 .group h3 {
   font-size: 13px;
