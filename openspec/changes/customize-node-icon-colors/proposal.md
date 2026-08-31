@@ -9,7 +9,7 @@
   - 使用者點選色圈即時切換當前選中色，5×5 圖示網格即時以該色預覽。點選圖示後同時帶入該圖示與色彩並自動收合抽屜。
 - **動態圖示元件支援自訂線條色彩（`NodeIcon.vue`）**：
   - 擴充 `color?: string` prop，以純粹的 Lucide SVG 線條顏色變化（stroke / color）呈現，不使用多餘的底色徽章。
-- **節點管理表單與抽屜（`NodesView.vue` / `EditNodeSheet.vue`）**：
+- **節點管理表單抽屜（`NodeFormSheet.vue`）**：
   - 新增與編輯節點時支援設定與儲存 `color` 欄位至本地 IndexedDB。
   - 純圖示 Avatar 觸發按鈕即時渲染當前選定的線條顏色。
 - **全站節點圖示色彩聯動**：
@@ -30,8 +30,8 @@
 - **Affected Components**:
   - `src/components/IconPickerSheet.vue`
   - `src/components/NodeIcon.vue`
+  - `src/components/NodeFormSheet.vue`
   - `src/components/NodesView.vue`
-  - `src/components/EditNodeSheet.vue`
   - `src/components/ReceiptCard.vue`
   - `src/components/QuickNodeBar.vue`
   - `src/components/GraphView.vue`

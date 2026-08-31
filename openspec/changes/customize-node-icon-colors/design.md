@@ -8,7 +8,7 @@
 - 在 `IconPickerSheet.vue` 頂部整合 8 款固定預設色圈（Swatches），即時驅動下方 5×5 圖示網格之色彩預覽。
 - 點選圖示時同時確定「圖示」與「顏色」，並自動關閉抽屜。
 - `<NodeIcon :name="icon" :color="color" />` 以純 Lucide 向量線條著色，不使用外圍底色徽章。
-- 在 `NodesView.vue`（新增）與 `EditNodeSheet.vue`（編輯）中串接 `color` 狀態並儲存至 Dexie 本地資料庫。
+- 在 `NodeFormSheet.vue`（新增與編輯節點抽屜）中串接 `color` 狀態並儲存至 Dexie 本地資料庫。
 - 在收據流向（`ReceiptCard.vue`）、帳戶列表（`QuickNodeBar.vue`）與圖論結餘（`GraphView.vue`）中呈現節點專屬線條顏色。
 - 更新 `seeds.ts` 為預設示範節點設定代表色。
 

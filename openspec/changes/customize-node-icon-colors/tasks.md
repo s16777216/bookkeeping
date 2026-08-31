@@ -5,7 +5,7 @@
 
 ## 2. 節點管理與全站色彩串接
 
-- [ ] 2.1 更新 `src/components/NodesView.vue` 與 `src/components/EditNodeSheet.vue` 串接色彩挑選、Avatar 預覽與 IndexedDB 存取
+- [ ] 2.1 更新 `src/components/NodeFormSheet.vue` 串接色彩挑選、Avatar 預覽與表單狀態，並於 `src/components/NodesView.vue` 確保 IndexedDB 存取一致
 - [ ] 2.2 在 `src/components/ReceiptCard.vue`、`src/components/QuickNodeBar.vue` 與 `src/components/GraphView.vue` 傳入並呈現節點代表色
 - [ ] 2.3 更新 `src/db/seeds.ts` 預設示範節點的代表色
 - [ ] 2.4 執行型別檢查與建置驗證（`npm run build`），確認色彩挑選與全站呈現功能完整且無錯誤
