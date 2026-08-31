@@ -12,6 +12,7 @@ const props = defineProps<{
     name: string;
     owner: NodeOwner;
     icon?: string;
+    color?: string;
   }) => Promise<FinanceNode | void>;
   onUpdate: (
     id: string,
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 
 const name = ref("");
 const icon = ref("landmark");
+const color = ref("#111827");
 const owner = ref<NodeOwner>("me");
 const isPickerOpen = ref(false);
 const error = ref("");
@@ -47,10 +49,12 @@ watch(
       if (props.node) {
         name.value = props.node.name;
         icon.value = props.node.icon || "landmark";
+        color.value = props.node.color || "#111827";
         owner.value = props.node.owner;
       } else {
         name.value = "";
         icon.value = "landmark";
+        color.value = "#111827";
         owner.value = "me";
       }
       error.value = "";
@@ -76,11 +80,13 @@ async function handleSubmit() {
         name: trimmedName,
         owner: owner.value,
         icon: icon.value,
+        color: color.value,
       });
     } else if (props.node) {
       await props.onUpdate(props.node.id, {
         name: trimmedName,
         icon: icon.value,
+        color: color.value,
         owner: owner.value,
       });
     }
@@ -116,10 +122,10 @@ async function archive() {
           <button
             type="button"
             class="icon-avatar-trigger"
-            title="點擊更換圖示"
+            title="點擊更換圖示與代表色"
             @click="isPickerOpen = true"
           >
-            <NodeIcon :name="icon" :size="22" />
+            <NodeIcon :name="icon" :color="color" :size="22" />
           </button>
           <input
             v-model="name"
@@ -168,7 +174,9 @@ async function archive() {
     <IconPickerSheet
       :is-open="isPickerOpen"
       :model-value="icon"
+      :color="color"
       @update:model-value="icon = $event"
+      @update:color="color = $event"
       @close="isPickerOpen = false"
     />
   </BaseSheet>

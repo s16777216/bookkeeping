@@ -34,7 +34,7 @@ const money = (amount: number) =>
         class="row"
       >
         <span class="node-label-group">
-          <NodeIcon :name="node.icon" :size="16" />
+          <NodeIcon :name="node.icon" :color="node.color" :size="16" />
           <span>{{ node.name }}</span>
         </span>
         <b>NT$ {{ money(getNodeBalance(node.id)) }}</b>
@@ -44,7 +44,7 @@ const money = (amount: number) =>
       <h3>待收款</h3>
       <div v-for="item in receivables" :key="item.node.id" class="row">
         <span class="node-label-group">
-          <NodeIcon :name="item.node.icon" :size="16" />
+          <NodeIcon :name="item.node.icon" :color="item.node.color" :size="16" />
           <span>{{ item.node.name }}</span>
         </span>
         <b class="income">NT$ {{ money(item.amount) }}</b>
@@ -55,7 +55,7 @@ const money = (amount: number) =>
       <h3>待付款</h3>
       <div v-for="item in payables" :key="item.node.id" class="row">
         <span class="node-label-group">
-          <NodeIcon :name="item.node.icon" :size="16" />
+          <NodeIcon :name="item.node.icon" :color="item.node.color" :size="16" />
           <span>{{ item.node.name }}</span>
         </span>
         <b class="expense">NT$ {{ money(item.amount) }}</b>

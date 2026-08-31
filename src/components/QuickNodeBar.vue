@@ -24,7 +24,7 @@ const money = (node: FinanceNode) =>
         class="node-chip"
         @click="emit('selectNode', node)"
       >
-        <NodeIcon :name="node.icon" :size="18" />
+        <NodeIcon :name="node.icon" :color="node.color" :size="18" />
         <span
           ><b>{{ node.name }}</b
           ><small>{{ money(node) }}</small></span

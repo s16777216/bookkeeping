@@ -142,6 +142,7 @@ export function useGraphEngine() {
     name: string;
     owner: NodeOwner;
     icon?: string;
+    color?: string;
     currency?: string;
   }): Promise<FinanceNode> {
     const now = Date.now();
@@ -149,7 +150,8 @@ export function useGraphEngine() {
       id: ulid(),
       name: payload.name.trim(),
       owner: payload.owner,
-      icon: payload.icon || (payload.owner === "me" ? "🏦" : "🏷️"),
+      icon: payload.icon || (payload.owner === "me" ? "landmark" : "tag"),
+      color: payload.color || "#111827",
       currency: payload.currency || "TWD",
       updated_at: now,
       is_deleted: false,

@@ -11,6 +11,7 @@ const props = defineProps<{
     name: string;
     owner: NodeOwner;
     icon?: string;
+    color?: string;
   }) => Promise<FinanceNode>;
   onUpdateNode: (
     id: string,
@@ -71,7 +72,7 @@ function openEdit(node: FinanceNode) {
           @click="openEdit(node)"
         >
           <span class="node-icon">
-            <NodeIcon :name="node.icon" :size="20" />
+            <NodeIcon :name="node.icon" :color="node.color" :size="20" />
           </span>
           <div class="grow">
             <strong>{{ node.name }}</strong>

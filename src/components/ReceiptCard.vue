@@ -59,12 +59,12 @@ const date = computed(() =>
     }}</strong>
     <div class="flow">
       <span class="flow-node">
-        <NodeIcon :name="from?.icon" :size="16" />
+        <NodeIcon :name="from?.icon" :color="from?.color" :size="16" />
         <span>{{ from?.name || "未知" }}</span>
       </span>
       <ArrowRight :size="14" class="flow-arrow" />
       <span class="flow-node">
-        <NodeIcon :name="to?.icon" :size="16" />
+        <NodeIcon :name="to?.icon" :color="to?.color" :size="16" />
         <span>{{ to?.name || "未知" }}</span>
       </span>
     </div>

@@ -67,11 +67,13 @@ const props = withDefaults(
     name?: string;
     size?: number | string;
     strokeWidth?: number | string;
+    color?: string;
   }>(),
   {
     name: "tag",
     size: 20,
     strokeWidth: 1.75,
+    color: "currentColor",
   }
 );
 
@@ -90,6 +92,8 @@ const resolvedComponent = computed<Component>(() => {
     :is="resolvedComponent"
     :size="size"
     :stroke-width="strokeWidth"
+    :color="color"
+    :style="color ? { color } : undefined"
     class="node-icon-svg"
   />
 </template>
