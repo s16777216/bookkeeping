@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import NodeIcon from "./NodeIcon.vue";
-import type { FinanceNode } from "../types/finance";
+import NodeIcon from "@/components/common/NodeIcon.vue";
+import type { FinanceNode } from "@/types/finance";
 
 const props = defineProps<{
   nodes: FinanceNode[];

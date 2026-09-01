@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Network } from "lucide-vue-next";
-import NodeIcon from "./NodeIcon.vue";
+import NodeIcon from "@/components/common/NodeIcon.vue";
 import type {
   CounterpartyBalance,
   FinanceNode,
   SummaryMetrics,
-} from "../types/finance";
+} from "@/types/finance";
 
 defineProps<{
   nodes: FinanceNode[];

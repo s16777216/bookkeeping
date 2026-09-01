@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useGraphEngine } from "./composables/useGraphEngine";
-import type { FinanceNode } from "./types/finance";
+import { useGraphEngine } from "@/composables/useGraphEngine";
+import type { FinanceNode } from "@/types/finance";
 
-import HeaderBar from "./components/HeaderBar.vue";
-import BalanceBanner from "./components/BalanceBanner.vue";
-import QuickNodeBar from "./components/QuickNodeBar.vue";
-import ReceiptFeed from "./components/ReceiptFeed.vue";
-import QuickEntrySheet from "./components/QuickEntrySheet.vue";
-import BottomNavBar from "./components/BottomNavBar.vue";
-import GraphView from "./components/GraphView.vue";
-import NodesView from "./components/NodesView.vue";
+import HeaderBar from "@/components/common/HeaderBar.vue";
+import LedgerView from "@/views/LedgerView.vue";
+import GraphView from "@/views/GraphView.vue";
+import NodesView from "@/views/NodesView.vue";
+import QuickEntrySheet from "@/components/sheets/QuickEntrySheet.vue";
+import BottomNavBar from "@/components/common/BottomNavBar.vue";
 
 const {
   nodes,
@@ -77,26 +75,18 @@ async function handleUndoEdge(id: string) {
     <HeaderBar />
 
     <!-- 1. 收據帳本分頁 (Ledger Tab) -->
-    <main v-if="currentTab === 'ledger'" class="tab-content animate-fade-in">
-      <!-- 總資產與收支看板 -->
-      <BalanceBanner :metrics="summaryMetrics" />
-
-      <!-- 常用節點橫向滑動列 -->
-      <QuickNodeBar
+    <main v-if="currentTab === 'ledger'" class="tab-content">
+      <LedgerView
+        :metrics="summaryMetrics"
         :nodes="nodes"
-        :get-node-balance="getNodeBalance"
-        @select-node="handleOpenEntry"
-      />
-
-      <!-- 近期數位收據清單 -->
-      <ReceiptFeed
         :edges="edges"
         :node-map="nodeMap"
         :tag-map="tagMap"
-        :on-delete-edge="handleDeleteEdge"
-        :on-complete-edge="handleCompleteEdge"
-        :on-undo-edge="handleUndoEdge"
-        :on-open-entry="() => handleOpenEntry()"
+        :get-node-balance="getNodeBalance"
+        @open-entry="handleOpenEntry"
+        @delete-edge="handleDeleteEdge"
+        @complete-edge="handleCompleteEdge"
+        @undo-edge="handleUndoEdge"
       />
     </main>
 

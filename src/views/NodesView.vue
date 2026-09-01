@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { WalletCards, Plus, Pencil } from "lucide-vue-next";
-import type { FinanceNode, NodeOwner } from "../types/finance";
-import NodeFormSheet from "./NodeFormSheet.vue";
-import NodeIcon from "./NodeIcon.vue";
+import type { FinanceNode, NodeOwner } from "@/types/finance";
+import NodeFormSheet from "@/components/sheets/NodeFormSheet.vue";
+import NodeIcon from "@/components/common/NodeIcon.vue";
 
 const props = defineProps<{
   nodes: FinanceNode[];

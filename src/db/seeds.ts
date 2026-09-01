@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
-import { db } from "./index";
-import type { FinanceNode, FinanceEdge, FinanceTag } from "../types/finance";
+import { db } from "@/db";
+import type { FinanceNode, FinanceEdge, FinanceTag } from "@/types/finance";
 
 export async function seedInitialData(force = false): Promise<void> {
   const nodeCount = await db.nodes.count();

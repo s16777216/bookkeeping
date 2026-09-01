@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { ArrowRight, Trash2, Clock, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-vue-next";
-import NodeIcon from "./NodeIcon.vue";
-import type { FinanceEdge, FinanceNode, FinanceTag } from "../types/finance";
+import NodeIcon from "@/components/common/NodeIcon.vue";
+import type { FinanceEdge, FinanceNode, FinanceTag } from "@/types/finance";
 
 const props = defineProps<{
   edge: FinanceEdge;

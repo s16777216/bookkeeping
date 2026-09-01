@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { FinanceEdge, FinanceNode, FinanceTag } from "../types/finance";
-import ReceiptCard from "./ReceiptCard.vue";
+import type { FinanceEdge, FinanceNode, FinanceTag } from "@/types/finance";
+import ReceiptCard from "@/components/ledger/ReceiptCard.vue";
 const props = defineProps<{
   edges: FinanceEdge[];
   nodeMap: Map<string, FinanceNode>;

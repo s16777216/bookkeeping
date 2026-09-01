@@ -5,7 +5,7 @@ import type {
   FinanceTag,
   LegacyNodeType,
   NodeOwner,
-} from "../types/finance";
+} from "@/types/finance";
 
 type LegacyNode = Partial<FinanceNode> & { id: string; type?: LegacyNodeType };
 type LegacyEdge = Partial<FinanceEdge> & { id: string; timestamp?: number };

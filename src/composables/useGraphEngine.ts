@@ -1,7 +1,7 @@
 import { computed, ref } from "vue";
 import { ulid } from "ulid";
-import { db } from "../db";
-import { seedInitialData } from "../db/seeds";
+import { db } from "@/db";
+import { seedInitialData } from "@/db/seeds";
 import type {
   CounterpartyBalance,
   FinanceEdge,
@@ -9,7 +9,7 @@ import type {
   FinanceTag,
   NodeOwner,
   SummaryMetrics,
-} from "../types/finance";
+} from "@/types/finance";
 
 const normalizeTagName = (name: string) => name.trim().toLocaleLowerCase();
 

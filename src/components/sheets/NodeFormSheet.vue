@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import type { FinanceNode, NodeOwner } from "../types/finance";
-import BaseSheet from "./BaseSheet.vue";
-import NodeIcon from "./NodeIcon.vue";
-import IconPickerSheet from "./IconPickerSheet.vue";
+import type { FinanceNode, NodeOwner } from "@/types/finance";
+import BaseSheet from "@/components/sheets/BaseSheet.vue";
+import NodeIcon from "@/components/common/NodeIcon.vue";
+import IconPickerSheet from "@/components/sheets/IconPickerSheet.vue";
 
 const props = defineProps<{
   isOpen: boolean;

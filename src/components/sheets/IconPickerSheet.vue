@@ -13,8 +13,8 @@ export const AVAILABLE_COLORS = [
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import BaseSheet from "./BaseSheet.vue";
-import NodeIcon, { AVAILABLE_ICON_KEYS } from "./NodeIcon.vue";
+import BaseSheet from "@/components/sheets/BaseSheet.vue";
+import NodeIcon, { AVAILABLE_ICON_KEYS } from "@/components/common/NodeIcon.vue";
 
 const props = withDefaults(
   defineProps<{

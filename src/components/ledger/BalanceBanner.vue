@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SummaryMetrics } from "../types/finance";
+import type { SummaryMetrics } from "@/types/finance";
 
 const props = defineProps<{
   metrics: SummaryMetrics;
