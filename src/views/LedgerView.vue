@@ -20,9 +20,7 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: "openEntry", node?: FinanceNode): void;
-  (e: "deleteEdge", id: string): void;
-  (e: "completeEdge", id: string): void;
-  (e: "undoEdge", id: string): void;
+  (e: "editEdge", edge: FinanceEdge): void;
 }>();
 </script>
 
@@ -43,9 +41,7 @@ const emit = defineEmits<{
       :edges="edges"
       :node-map="nodeMap"
       :tag-map="tagMap"
-      :on-delete-edge="(id) => emit('deleteEdge', id)"
-      :on-complete-edge="(id) => emit('completeEdge', id)"
-      :on-undo-edge="(id) => emit('undoEdge', id)"
+      :on-select-edge="(edge) => emit('editEdge', edge)"
       :on-open-entry="() => emit('openEntry')"
     />
   </div>

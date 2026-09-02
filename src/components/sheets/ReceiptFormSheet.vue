@@ -2,7 +2,7 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { ulid } from "ulid";
 import { Plus, Trash2, Layers, Receipt } from "lucide-vue-next";
-import type { FinanceNode, FinanceTag, ReceiptItem } from "@/types/finance";
+import type { FinanceEdge, FinanceNode, FinanceTag, ReceiptItem } from "@/types/finance";
 import BaseSheet from "@/components/sheets/BaseSheet.vue";
 import CalculatorKeypad from "@/components/common/CalculatorKeypad.vue";
 
@@ -19,6 +19,7 @@ const props = defineProps<{
   nodes: FinanceNode[];
   tags: FinanceTag[];
   initialFromNode?: FinanceNode | null;
+  initialEdge?: FinanceEdge | null;
   onCreateTag: (name: string) => Promise<FinanceTag>;
   onRenameTag: (id: string, name: string) => Promise<void>;
   onArchiveTag: (id: string) => Promise<void>;
@@ -29,6 +30,7 @@ const emit = defineEmits<{
   (
     e: "submit",
     payload: {
+      id?: string;
       from_node_id: string;
       to_node_id: string;
       amount: number;
@@ -38,7 +40,15 @@ const emit = defineEmits<{
       items?: ReceiptItem[];
     },
   ): void;
+  (e: "delete", id: string): void;
 }>();
+
+const isEditMode = computed(() => Boolean(props.initialEdge));
+const sheetTitle = computed(() =>
+  props.initialEdge
+    ? `編輯收據 ${props.initialEdge.receipt_no ? `(${props.initialEdge.receipt_no})` : ""}`
+    : "記一筆收據",
+);
 
 const fromId = ref("");
 const toId = ref("");
@@ -157,30 +167,75 @@ function close() {
   emit("close");
 }
 
+function handleDelete() {
+  if (!props.initialEdge) return;
+  if (window.confirm("確定要刪除此筆收據嗎？此操作將會移除這筆紀錄。")) {
+    emit("delete", props.initialEdge.id);
+    close();
+  }
+}
+
 watch(
   () => props.isOpen,
   (open) => {
     if (open) {
-      fromId.value =
-        props.initialFromNode?.id ||
-        props.nodes.find((node) => node.owner === "me")?.id ||
-        "";
-      toId.value =
-        props.nodes.find((node) => node.owner === "external")?.id ||
-        props.nodes.find((node) => node.id !== fromId.value)?.id ||
-        "";
-      mode.value = "single";
-      items.value = [];
-      focusedItemIndex.value = 0;
-      keypadRef.value?.reset();
-      amount.value = 0;
-      isEvaluated.value = false;
-      isCalcError.value = false;
-      memo.value = "";
-      executed.value = true;
-      selectedTags.value = [];
-      tagInput.value = "";
       error.value = "";
+      tagInput.value = "";
+      managingTags.value = false;
+
+      if (props.initialEdge) {
+        // === 編輯模式 (Edit Mode) ===
+        const edge = props.initialEdge;
+        fromId.value = edge.from_node_id;
+        toId.value = edge.to_node_id;
+        memo.value = edge.memo || "";
+        executed.value = Boolean(edge.executed_at);
+        selectedTags.value = [...(edge.tag_ids || [])];
+
+        if (edge.items && edge.items.length > 0) {
+          mode.value = "items";
+          items.value = edge.items.map((item) => ({
+            id: item.id || ulid(),
+            name: item.name,
+            amount: item.amount,
+            quantity: item.quantity || 1,
+            isEvaluated: true,
+          }));
+          focusedItemIndex.value = 0;
+          nextTick(() => {
+            syncKeypadToFocusedItem();
+          });
+        } else {
+          mode.value = "single";
+          items.value = [];
+          amount.value = edge.amount;
+          isEvaluated.value = true;
+          isCalcError.value = false;
+          nextTick(() => {
+            keypadRef.value?.setValue(edge.amount, true);
+          });
+        }
+      } else {
+        // === 新增模式 (Create Mode) ===
+        fromId.value =
+          props.initialFromNode?.id ||
+          props.nodes.find((node) => node.owner === "me")?.id ||
+          "";
+        toId.value =
+          props.nodes.find((node) => node.owner === "external")?.id ||
+          props.nodes.find((node) => node.id !== fromId.value)?.id ||
+          "";
+        mode.value = "single";
+        items.value = [];
+        focusedItemIndex.value = 0;
+        keypadRef.value?.reset();
+        amount.value = 0;
+        isEvaluated.value = false;
+        isCalcError.value = false;
+        memo.value = "";
+        executed.value = true;
+        selectedTags.value = [];
+      }
     }
   },
 );
@@ -203,6 +258,10 @@ function submit() {
     return;
   }
 
+  const executedTimestamp = executed.value
+    ? props.initialEdge?.executed_at || Date.now()
+    : null;
+
   if (mode.value === "single") {
     // 單筆模式：必須按下 = 結算確認
     if (!isEvaluated.value) {
@@ -217,11 +276,12 @@ function submit() {
     }
 
     emit("submit", {
+      id: props.initialEdge?.id,
       from_node_id: fromId.value,
       to_node_id: toId.value,
       amount: value,
       memo: memo.value,
-      executed_at: executed.value ? Date.now() : null,
+      executed_at: executedTimestamp,
       tag_ids: [...selectedTags.value],
     });
   } else {
@@ -254,11 +314,12 @@ function submit() {
     }
 
     emit("submit", {
+      id: props.initialEdge?.id,
       from_node_id: fromId.value,
       to_node_id: toId.value,
       amount: totalVal,
       memo: memo.value,
-      executed_at: executed.value ? Date.now() : null,
+      executed_at: executedTimestamp,
       tag_ids: [...selectedTags.value],
       items: items.value.map((i) => ({
         id: i.id,
@@ -274,7 +335,7 @@ function submit() {
 </script>
 
 <template>
-  <BaseSheet :is-open="isOpen" title="記一筆收據" size="lg" @close="close">
+  <BaseSheet :is-open="isOpen" :title="sheetTitle" size="lg" @close="close">
     <div class="quick-entry-form">
       <p v-if="error" class="error">{{ error }}</p>
 
@@ -471,14 +532,27 @@ function submit() {
     </div>
 
     <template #footer>
-      <button class="submit" type="button" @click="submit">
-        儲存
-        {{
-          mode === "items" && totalItemsAmount > 0
-            ? `(NT$ ${totalItemsAmount.toLocaleString("zh-TW")})`
-            : ""
-        }}
-      </button>
+      <div class="sheet-footer-actions">
+        <button
+          v-if="isEditMode"
+          type="button"
+          class="delete-btn"
+          @click="handleDelete"
+        >
+          <Trash2 :size="15" />
+          刪除收據
+        </button>
+        <button class="submit" type="button" @click="submit">
+          儲存
+          {{
+            mode === "items" && totalItemsAmount > 0
+              ? `(NT$ ${totalItemsAmount.toLocaleString("zh-TW")})`
+              : mode === "single" && amount > 0 && isEvaluated
+                ? `(NT$ ${amount.toLocaleString("zh-TW")})`
+                : ""
+          }}
+        </button>
+      </div>
     </template>
   </BaseSheet>
 </template>
@@ -799,8 +873,33 @@ function submit() {
 }
 
 /* 底部固定操作列 */
-.submit {
+.sheet-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
+}
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent-expense);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: var(--accent-expense);
+}
+.submit {
+  flex: 1;
   padding: 12px;
   font-size: 15px;
   font-weight: 600;
@@ -809,6 +908,7 @@ function submit() {
   color: #fff;
   border: 0;
   cursor: pointer;
+  transition: opacity 0.15s ease;
 }
 .submit:active {
   opacity: 0.92;
