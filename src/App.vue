@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useGraphEngine } from "@/composables/useGraphEngine";
-import type { FinanceNode } from "@/types/finance";
+import type { FinanceNode, ReceiptItem } from "@/types/finance";
 
 import HeaderBar from "@/components/common/HeaderBar.vue";
 import LedgerView from "@/views/LedgerView.vue";
@@ -53,6 +53,7 @@ async function handleEntrySubmit(payload: {
   memo: string;
   executed_at: number | null;
   tag_ids: string[];
+  items?: ReceiptItem[];
 }) {
   await createEdge(payload);
 }

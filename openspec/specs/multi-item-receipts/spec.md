@@ -1,0 +1,28 @@
+# multi-item-receipts Specification
+
+## Requirements
+
+### Requirement: Multi-Item Line Entry
+系統 SHALL 允許使用者在記帳面板中為單張收據建立多筆品項明細（Line Items），每一項目可記錄品名、金額與可選數量，並由系統自動計算收據總金額。
+
+#### Scenario: 成功建立多品項收據
+- **WHEN** 使用者在記帳面板切換為多品項模式，新增 2 個以上品項（例如：鮮奶 $90、抹布 $40）並送出
+- **THEN** 系統應自動計算總金額為 NT$ 130，建立包含品項明細的收據資料並儲存至 IndexedDB
+
+#### Scenario: 品項金額自動同步總額
+- **WHEN** 使用者在明細模式中修改任一品項的金額或增刪品項
+- **THEN** 介面上的收據總金額應即時重新加總並反映最新合計
+
+### Requirement: Keypad Integration for Line Items
+記帳面板 SHALL 支援在明細模式下選中特定品項金額欄位，透過共用計算機鍵盤輸入並於按下 `=` 時結算該項金額。
+
+#### Scenario: 透過計算機輸入品項金額
+- **WHEN** 使用者點選第 2 項品項的金額輸入框，並於下方計算機輸入 `50 + 20 =`
+- **THEN** 該品項金額應結算為 70，收據總金額同步更新
+
+### Requirement: Multi-Item Receipt Card Display
+收據卡片清單 SHALL 清楚標示該收據為多品項明細，並提供展開/收合清單以供檢視個別品名、數量與金額。
+
+#### Scenario: 在首頁檢視多品項收據小票
+- **WHEN** 使用者在首頁收據帳本瀏覽包含多品項的收據卡片
+- **THEN** 卡片應顯示品項總數徽章，並可點擊展開查閱各商品品名與金額明細

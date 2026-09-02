@@ -8,6 +8,7 @@ import type {
   FinanceNode,
   FinanceTag,
   NodeOwner,
+  ReceiptItem,
   SummaryMetrics,
 } from "@/types/finance";
 
@@ -178,6 +179,7 @@ export function useGraphEngine() {
     executed_at?: number | null;
     memo?: string;
     tag_ids?: string[];
+    items?: ReceiptItem[];
   }): Promise<FinanceEdge> {
     const now = Date.now();
     const edge: FinanceEdge = {
@@ -191,6 +193,7 @@ export function useGraphEngine() {
       memo: payload.memo?.trim(),
       tag_ids: [...(payload.tag_ids || [])],
       receipt_no: `RCP-${Math.floor(100 + Math.random() * 900)}`,
+      items: payload.items && payload.items.length > 0 ? [...payload.items] : undefined,
       updated_at: now,
       is_deleted: false,
     };

@@ -20,6 +20,13 @@ export interface FinanceTag {
   is_deleted: boolean;
 }
 
+export interface ReceiptItem {
+  id: string;
+  name: string;
+  amount: number;
+  quantity?: number;
+}
+
 export interface FinanceEdge {
   id: string;
   from_node_id: string;
@@ -30,6 +37,7 @@ export interface FinanceEdge {
   tag_ids?: string[];
   memo?: string;
   receipt_no?: string;
+  items?: ReceiptItem[];
   updated_at: number;
   is_deleted: boolean;
 }

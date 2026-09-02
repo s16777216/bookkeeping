@@ -333,8 +333,22 @@ function handleNumberTouchEnd(event: TouchEvent) {
   }
 }
 
+function setValue(num: number, evaluated = true) {
+  displayValue.value = String(num);
+  previousValue.value = null;
+  activeOperator.value = null;
+  waitingForOperand.value = false;
+  isEvaluated.value = evaluated;
+  lastOperator.value = null;
+  lastOperand.value = null;
+  historyExpression.value = evaluated && num > 0 ? `${num} =` : "";
+  isError.value = false;
+  syncState();
+}
+
 defineExpose({
   reset: resetAll,
+  setValue,
   backspace: () => handleKeypadPress("⌫"),
 });
 </script>
