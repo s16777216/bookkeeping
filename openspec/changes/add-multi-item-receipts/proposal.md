@@ -1,19 +1,19 @@
 ## Why
 
-目前系統的收據（Edge）僅支援「單一來源 ➔ 單一去向 ➔ 單一金額」的一對一架構。然而在日常生活中，超市採購、大賣場購物、綜合帳單往往包含多個不同品項（如食品、日用品、文具），若分開記帳過於繁瑣，若混為一筆則無法精確統計各分類的支出。
-透過支援「多品項收據（Multi-item Receipts）」，使用者可在同一張收據內拆分多個商品項目，各別指定支出分類，由系統自動加總並於圖論引擎中精確分流計算。
+日常生活在大賣場、超市或超商購物時，單筆消費往往包含多個商品品項（如鮮奶、抹布、零食）。目前收據僅能記錄單一總金額與備忘，無法紀錄詳細購買明細。
+透過支援「多品項收據明細（Multi-Item Receipts）」，使用者可在單筆交易內記錄多個商品品項名稱、金額與數量，並由介面自動計算總額，在收據帳本中完整還原如紙本超商發票小票般的明細查閱體驗。
 
 ## What Changes
 
-- **資料模型擴充（Data Model）**：在 [src/types/finance.ts](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/types/finance.ts) 中定義 `ReceiptItem` 型別，並在 `FinanceEdge` 中加入 `items?: ReceiptItem[]` 欄位。
-- **圖論運算引擎升級（Graph Engine）**：在 [useGraphEngine.ts](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/composables/useGraphEngine.ts) 中，若收據包含 `items`，自動將出款總額計入來源帳戶，並將各 item 之金額個別計入各子分類節點的流入度（Inflow），確保總資產與各項支出分類 100% 精準平衡。
-- **記帳面板支援明細模式（QuickEntrySheet）**：提供快速單筆與多品項明細兩種模式，支援動態「＋ 新增品項」、自訂品項名稱、金額、個別分類選擇與總金額自動計算。
-- **擬真收據小票卡片升級（ReceiptCard）**：在首頁收據卡片中支援展開檢視多品項明細清單（品名、分類標籤、單項金額、品項數統計）。
+- **資料模型擴充（Data Model）**：在 [src/types/finance.ts](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/types/finance.ts) 中新增 `ReceiptItem` 介面（包含 `id`, `name`, `amount`, `quantity?`），並在 `FinanceEdge` 中擴充 `items?: ReceiptItem[]`。
+- **單一金流架構維持（Single Flow Integrity）**：收據維持嚴格的「單一來源（`from_node_id`）➔ 單一去向（`to_node_id`）」金流方向，圖論記帳引擎保持高效單一邊計算。
+- **記帳面板明細模式（QuickEntrySheet）**：在 [src/components/sheets/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/sheets/QuickEntrySheet.vue) 提供「快速單筆」與「多品項明細」切換，支援逐項編輯品名、金額、數量，並整合下方計算機鍵盤輸入與總額自動加總防呆。
+- **擬真收據小票卡片升級（ReceiptCard）**：在 [src/components/ledger/ReceiptCard.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/ledger/ReceiptCard.vue) 首頁收據卡片中支援顯示「N 個品項」徽章，並提供點擊展開/收合明細小票清單。
 
 ## Capabilities
 
 ### New Capabilities
-- `multi-item-receipts`: 規範單張收據內多個子品項（Line Items）的建立、編輯、各自分類指派、總額自動加總與圖論出入度分解計算。
+- `multi-item-receipts`: 規範單張收據內多品項內容明細（Line Items）的建立、編輯、總額自動同步與小票折疊展開展示。
 
 ### Modified Capabilities
 <!-- 無既有 specs 修改 -->
@@ -21,7 +21,6 @@
 ## Impact
 
 - **型別定義**：[src/types/finance.ts](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/types/finance.ts)
-- **核心運算**：[src/composables/useGraphEngine.ts](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/composables/useGraphEngine.ts)
-- **記帳抽屜**：[src/components/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/QuickEntrySheet.vue)
-- **收據卡片**：[src/components/ReceiptCard.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/ReceiptCard.vue)
-- **資料庫**：IndexedDB 自動向下相容既有單筆收據。
+- **記帳抽屜**：[src/components/sheets/QuickEntrySheet.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/sheets/QuickEntrySheet.vue)
+- **收據卡片**：[src/components/ledger/ReceiptCard.vue](file:///c:/Users/l1597/OneDrive/桌面/bookkeeping/src/components/ledger/ReceiptCard.vue)
+- **資料庫**：IndexedDB 自動向下相容既有單筆收據（`items` 為 optional）。
